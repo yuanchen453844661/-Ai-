@@ -1,0 +1,5 @@
+{
+  "name": "Copy of RealVision AI - 实景效果生成器",
+  "description": "上传您的草图、线稿或设计图，利用 Gemini AI 瞬间将其转化为逼真的实景效果图。",
+  "requestFramePermissions": []
+}
