@@ -27,11 +27,19 @@ const ResultViewer: React.FC<ResultViewerProps> = ({ originalUrl, generatedUrl, 
   // Overlay for full screen
   if (isFullScreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-900/95 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
-        <button onClick={toggleFullScreen} className="absolute top-4 right-4 text-white hover:text-blue-400 p-2 transition-colors">
+      <div 
+        className="fixed inset-0 z-50 bg-slate-900/95 flex flex-col items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out"
+        onClick={toggleFullScreen}
+      >
+        <button onClick={toggleFullScreen} className="absolute top-4 right-4 text-white hover:text-blue-400 p-2 transition-colors z-50">
           <X size={32} />
         </button>
-        <img src={generatedUrl} alt="Full Screen Generated" className="max-w-full max-h-full object-contain rounded-md shadow-2xl" />
+        <img 
+          src={generatedUrl} 
+          alt="Full Screen Generated" 
+          className="max-w-full max-h-full object-contain rounded-md shadow-2xl cursor-default" 
+          onClick={(e) => e.stopPropagation()} 
+        />
       </div>
     );
   }
@@ -79,7 +87,13 @@ const ResultViewer: React.FC<ResultViewerProps> = ({ originalUrl, generatedUrl, 
       <div className="flex-1 relative bg-slate-100 overflow-hidden">
         {activeTab === 'result' && (
           <div className="w-full h-full flex items-center justify-center p-4">
-            <img src={generatedUrl} alt="Generated" className="max-w-full max-h-full object-contain shadow-lg rounded-lg" />
+            <img 
+              src={generatedUrl} 
+              alt="Generated" 
+              onClick={toggleFullScreen}
+              className="max-w-full max-h-full object-contain shadow-lg rounded-lg cursor-zoom-in hover:shadow-xl transition-all"
+              title="点击全屏查看"
+            />
           </div>
         )}
 
@@ -95,9 +109,15 @@ const ResultViewer: React.FC<ResultViewerProps> = ({ originalUrl, generatedUrl, 
                 <span className="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm z-10">线稿/原图</span>
                 <img src={originalUrl} alt="Original" className="max-w-full max-h-full object-contain shadow-md rounded" />
             </div>
-            <div className="flex-1 h-1/2 md:h-full p-4 flex flex-col items-center justify-center relative">
+            <div className="flex-1 h-1/2 md:h-full p-4 flex flex-col items-center justify-center relative group-hover:bg-slate-50 transition-colors">
                 <span className="absolute top-2 left-2 bg-blue-600/80 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm z-10">AI 渲染</span>
-                <img src={generatedUrl} alt="Generated" className="max-w-full max-h-full object-contain shadow-md rounded" />
+                <img 
+                  src={generatedUrl} 
+                  alt="Generated" 
+                  onClick={toggleFullScreen}
+                  className="max-w-full max-h-full object-contain shadow-md rounded cursor-zoom-in hover:shadow-lg transition-all"
+                  title="点击全屏查看"
+                />
             </div>
           </div>
         )}
