@@ -2,10 +2,11 @@ import { GoogleGenAI } from "@google/genai";
 import { GenerateRequest, GenerateResponse } from "../types";
 import { DEFAULT_PROMPT_PREFIX, DEFAULT_PROMPT_SUFFIX } from "../constants";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const generateRealisticImage = async (request: GenerateRequest): Promise<GenerateResponse> => {
   try {
+    // Initialize inside the function to avoid top-level crashes if process.env.API_KEY is undefined on load
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
     const { image, prompt, renderingType, renderingStyle } = request;
 
     // Remove the data URL prefix (e.g., "data:image/png;base64,") to get raw base64
