@@ -4,8 +4,17 @@ import { DEFAULT_PROMPT_PREFIX, DEFAULT_PROMPT_SUFFIX } from "../constants";
 
 export const generateRealisticImage = async (request: GenerateRequest): Promise<GenerateResponse> => {
   try {
-    // Initialize inside the function to avoid top-level crashes if process.env.API_KEY is undefined on load
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY;
+
+    // Debug log (safe, doesn't reveal key)
+    console.log("Gemini Service Initializing. API Key present:", !!apiKey);
+
+    if (!apiKey) {
+      throw new Error("API配置错误：未找到 API Key。请检查 Vercel 环境变量设置并重新部署。");
+    }
+
+    // Initialize inside the function
+    const ai = new GoogleGenAI({ apiKey: apiKey });
     
     const { image, prompt, renderingType, renderingStyle } = request;
 
@@ -13,7 +22,6 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
     const base64Data = image.base64.split(',')[1];
 
     // Construct a specific prompt based on user selection
-    // Structure: [Role Definition] + [View Type] + [Style Definition] + [User Details] + [Quality Suffix]
     const finalPrompt = `
       ${DEFAULT_PROMPT_PREFIX}
       
@@ -23,6 +31,8 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       
       ${DEFAULT_PROMPT_SUFFIX}
     `;
+
+    console.log("Sending request to Gemini model...");
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -40,6 +50,8 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
         ],
       },
     });
+
+    console.log("Response received.");
 
     let generatedImageUrl = '';
 
@@ -60,8 +72,12 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
 
     return { imageUrl: generatedImageUrl };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
+    // Return a more user-friendly error message if it's the specific "API Key required" error
+    if (error.message?.includes("API key")) {
+      throw new Error("API 密钥无效或未配置。");
+    }
     throw error;
   }
 };
