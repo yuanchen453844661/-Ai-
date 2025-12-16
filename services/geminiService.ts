@@ -73,11 +73,30 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
     return { imageUrl: generatedImageUrl };
 
   } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    // Return a more user-friendly error message if it's the specific "API Key required" error
-    if (error.message?.includes("API key")) {
-      throw new Error("API 密钥无效或未配置。");
+    console.error("Gemini API Error Full Object:", error);
+    
+    const errorMessage = error.message || JSON.stringify(error);
+
+    // 1. Handle API Key missing/invalid
+    if (errorMessage.includes("API key")) {
+      throw new Error("API 密钥无效或未配置。请检查 Vercel 环境变量。");
     }
-    throw error;
+
+    // 2. Handle Quota Exceeded (429) - This is your current issue
+    if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED") || errorMessage.includes("quota")) {
+      throw new Error("API 调用配额已耗尽 (429)。您的 Gemini API 免费额度已用完，请稍后再试，或在 Google AI Studio 更换新的 API Key。");
+    }
+
+    // 3. Handle Model Overloaded (503)
+    if (errorMessage.includes("503") || errorMessage.includes("overloaded")) {
+      throw new Error("模型服务当前繁忙 (503)，请稍后重试。");
+    }
+
+    // 4. Handle Blocked Content (Safety settings)
+    if (errorMessage.includes("SAFETY") || errorMessage.includes("blocked")) {
+        throw new Error("生成的内容因安全策略被拦截，请尝试修改提示词或更换图片。");
+    }
+
+    throw new Error(`生成失败: ${error.message || "请检查网络或稍后重试"}`);
   }
 };
