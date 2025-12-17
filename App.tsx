@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus, ImagePlus, Trash2 } from 'lucide-react';
+import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus, ImagePlus, Trash2, Maximize2, Moon, Stars } from 'lucide-react';
 import Header from './components/Header';
 import UploadArea from './components/UploadArea';
 import ResultViewer from './components/ResultViewer';
@@ -13,13 +13,15 @@ const App: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>(RENDERING_TYPES[0].value);
   const [selectedStyle, setSelectedStyle] = useState<string>(INDUSTRIAL_STYLES[0].value);
   const [isCoveredPools, setIsCoveredPools] = useState<boolean>(false);
+  const [isDuskMode, setIsDuskMode] = useState<boolean>(false);
+  const [isNightMode, setIsNightMode] = useState<boolean>(false);
 
-  // Session State
+  // Session State - Now effectively single session, but keeping array structure for compatibility with existing types
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   
-  // UI State for Clear Confirmation
-  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState<boolean>(false);
+  // Zoom State
+  const [zoomedImageUrl, setZoomedImageUrl] = useState<string | null>(null);
 
   const activeSession = sessions.find(s => s.id === activeSessionId) || null;
 
@@ -27,7 +29,11 @@ const App: React.FC = () => {
   const isEyeLevelMode = selectedType === RENDERING_TYPES.find(t => t.id === 'eye-level')?.value;
 
   const handleImagesSelected = (newImages: ImageData[]) => {
-    const newSessions: Session[] = newImages.map(img => ({
+    if (newImages.length === 0) return;
+
+    // Single Image Logic: Always replace the current session with the new one
+    const img = newImages[0];
+    const newSession: Session = {
       id: img.id,
       original: img,
       referenceImage: null,
@@ -35,30 +41,18 @@ const App: React.FC = () => {
       status: AppStatus.IDLE,
       prompt: "",
       error: null
-    }));
+    };
 
-    setSessions(prev => [...prev, ...newSessions]);
-    
-    if (!activeSessionId && newSessions.length > 0) {
-      setActiveSessionId(newSessions[0].id);
-    } else if (newSessions.length > 0 && sessions.length === 0) {
-       setActiveSessionId(newSessions[0].id);
-    }
+    setSessions([newSession]);
+    setActiveSessionId(newSession.id);
   };
 
-  const handleRemoveSession = (e: React.MouseEvent, idToRemove: string) => {
+  const handleRemoveSession = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const newSessions = sessions.filter(s => s.id !== idToRemove);
-    setSessions(newSessions);
-
-    if (activeSessionId === idToRemove) {
-      setActiveSessionId(newSessions.length > 0 ? newSessions[newSessions.length - 1].id : null);
-    }
-    
-    // Reset clear confirm if list becomes empty
-    if (newSessions.length === 0) {
-        setIsClearConfirmOpen(false);
+    if (window.confirm("确定要移除这张图片吗？")) {
+        setSessions([]);
+        setActiveSessionId(null);
     }
   };
 
@@ -100,6 +94,18 @@ const App: React.FC = () => {
     updateActiveSession({ referenceImage: null });
   };
 
+  const handleDuskChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setIsDuskMode(checked);
+    if (checked) setIsNightMode(false); // Mutually exclusive
+  };
+
+  const handleNightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setIsNightMode(checked);
+    if (checked) setIsDuskMode(false); // Mutually exclusive
+  };
+
   const handleGenerate = async () => {
     if (!activeSession) return;
 
@@ -126,6 +132,8 @@ const App: React.FC = () => {
         renderingType: selectedType,
         renderingStyle: selectedStyle,
         isCoveredPools,
+        isDuskMode,
+        isNightMode,
       });
       updateActiveSession({ 
         generated: result.imageUrl, 
@@ -151,30 +159,30 @@ const App: React.FC = () => {
       handleDiscardResult();
   };
 
-  // New inline clear handlers
-  const handleTriggerClear = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsClearConfirmOpen(true);
-  };
-
-  const handleConfirmClear = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setActiveSessionId(null);
-    setSessions([]);
-    setIsClearConfirmOpen(false);
-  };
-
-  const handleCancelClear = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsClearConfirmOpen(false);
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-700">
       <Header />
+
+      {/* Image Zoom Modal */}
+      {zoomedImageUrl && (
+        <div 
+            className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+            onClick={() => setZoomedImageUrl(null)}
+        >
+            <button 
+                className="absolute top-4 right-4 text-white/70 hover:text-white p-2 transition-colors"
+                onClick={() => setZoomedImageUrl(null)}
+            >
+                <X size={32} />
+            </button>
+            <img 
+                src={zoomedImageUrl} 
+                alt="Zoomed Content" 
+                className="max-w-full max-h-full object-contain shadow-2xl rounded-sm cursor-zoom-out"
+                onClick={(e) => e.stopPropagation()} 
+            />
+        </div>
+      )}
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
@@ -185,7 +193,7 @@ const App: React.FC = () => {
               污水处理厂 <span className="text-blue-600">实景渲染</span> 专家
             </h1>
             <p className="max-w-2xl mx-auto text-lg text-slate-600">
-              支持批量上传。上传 CAD 导图或手绘线稿，选择工业风格与视角，AI 瞬间生成高质量效果图。
+              上传 CAD 导图或手绘线稿，选择工业风格与视角，AI 瞬间生成高质量效果图。
             </p>
           </div>
         )}
@@ -200,76 +208,50 @@ const App: React.FC = () => {
               <div className="flex items-center justify-between mb-2">
                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <ImageIcon className="text-blue-500" size={20}/>
-                    {sessions.length > 0 ? "1. 主视图列表 (正视图)" : "上传正视图/线稿"}
+                    {sessions.length > 0 ? "1. 当前主视图" : "上传正视图/线稿"}
                  </h2>
-                 {sessions.length > 0 && (
-                    isClearConfirmOpen ? (
-                        <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100 animate-in fade-in zoom-in duration-200">
-                            <span className="text-xs text-red-600 font-medium">确定清空?</span>
-                            <button 
-                              onClick={handleConfirmClear}
-                              className="text-xs bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600 transition-colors shadow-sm"
-                            >
-                              是
-                            </button>
-                            <button 
-                              onClick={handleCancelClear}
-                              className="text-xs text-slate-500 hover:text-slate-700 px-1"
-                            >
-                              否
-                            </button>
-                        </div>
-                    ) : (
-                        <button 
-                          type="button"
-                          onClick={handleTriggerClear} 
-                          className="text-xs text-red-500 hover:text-red-700 hover:underline px-2 py-1 rounded hover:bg-red-50 transition-colors flex items-center gap-1"
-                        >
-                            <Trash2 size={12} />
-                            清空列表
-                        </button>
-                    )
-                 )}
               </div>
 
               {sessions.length === 0 ? (
                 <UploadArea onImagesSelected={handleImagesSelected} isProcessing={false} />
               ) : (
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
-                  {sessions.map((session) => (
+                <div className="relative w-full rounded-xl overflow-hidden border-2 border-slate-100 group bg-slate-50 hover:border-blue-200 transition-colors">
+                    {/* Main Image Display */}
                     <div 
-                        key={session.id}
-                        onClick={() => setActiveSessionId(session.id)}
-                        className={`relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
-                            activeSessionId === session.id ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200 hover:border-blue-300'
-                        }`}
+                      className="relative h-64 w-full cursor-zoom-in bg-slate-100/50 flex items-center justify-center group/img"
+                      onClick={() => setZoomedImageUrl(activeSession?.original.url || null)}
                     >
-                        <img src={session.original.url} alt="thumbnail" className="w-full h-full object-cover" />
-                        
-                        {/* Status Indicators */}
-                        {session.status === AppStatus.SUCCESS && (
-                            <div className="absolute bottom-0 right-0 p-0.5 bg-green-500 rounded-tl-md">
-                                <CheckSquare size={10} className="text-white" />
-                            </div>
-                        )}
-                        {session.status === AppStatus.PROCESSING && (
-                            <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
-                                <Loader2 size={16} className="animate-spin text-blue-600" />
-                            </div>
-                        )}
+                       <img 
+                         src={activeSession?.original.url} 
+                         alt="Original" 
+                         className="max-h-full max-w-full object-contain" 
+                       />
+                       {/* Hover Overlay */}
+                       <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-full shadow-sm text-xs font-medium text-slate-600 flex items-center gap-1.5">
+                             <Maximize2 size={14} /> 点击放大
+                          </div>
+                       </div>
+                    </div>
 
-                        {/* Remove Button */}
+                    {/* Top Right Controls */}
+                    <div className="absolute top-2 right-2 flex gap-2">
                         <button 
-                            type="button"
-                            onClick={(e) => handleRemoveSession(e, session.id)}
-                            className="absolute top-0 right-0 bg-slate-900/50 hover:bg-red-500 text-white p-0.5 rounded-bl-md opacity-0 hover:opacity-100 group-hover:opacity-100 transition-opacity"
+                          onClick={handleRemoveSession}
+                          className="p-2 bg-white/80 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg shadow-sm backdrop-blur transition-all"
+                          title="移除图片"
                         >
-                            <X size={12} />
+                           <Trash2 size={16} />
                         </button>
                     </div>
-                  ))}
-                  {/* Mini Upload Button */}
-                  <UploadArea onImagesSelected={handleImagesSelected} isProcessing={false} compact />
+                    
+                    {/* Processing Overlay */}
+                    {activeSession?.status === AppStatus.PROCESSING && (
+                       <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                          <Loader2 size={32} className="text-blue-500 animate-spin mb-2" />
+                          <p className="text-sm font-medium text-slate-600">正在处理...</p>
+                       </div>
+                    )}
                 </div>
               )}
             </div>
@@ -278,7 +260,7 @@ const App: React.FC = () => {
             {activeSession && (
               <div className="space-y-6 animate-fade-in flex-1">
                 
-                {/* 1. Rendering Type Selection */}
+                {/* 2. Rendering Type Selection */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-bold text-slate-800 mb-2">
                     <LayoutTemplate size={16} className="text-blue-500" />
@@ -326,8 +308,13 @@ const App: React.FC = () => {
                             </span>
                          </div>
                        ) : (
-                         <div className="flex items-center gap-3 bg-white p-2 rounded border border-blue-200">
-                            <img src={activeSession.referenceImage.url} alt="Ref" className="w-10 h-10 object-cover rounded bg-slate-100" />
+                         <div className="flex items-center gap-3 bg-white p-2 rounded border border-blue-200 relative group">
+                            <img 
+                                src={activeSession.referenceImage.url} 
+                                alt="Ref" 
+                                className="w-12 h-12 object-cover rounded bg-slate-100 cursor-zoom-in border border-slate-100" 
+                                onClick={() => setZoomedImageUrl(activeSession.referenceImage?.url || null)}
+                            />
                             <div className="flex-1 min-w-0">
                                <p className="text-xs font-medium text-slate-700 truncate">侧视图已上传</p>
                                <p className="text-[10px] text-slate-400">将结合主视图共同生成</p>
@@ -338,24 +325,56 @@ const App: React.FC = () => {
                   )}
                 </div>
 
-                {/* 2. Style Selection */}
+                {/* 3. Style Selection */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col gap-2 mb-2">
                      <label className="flex items-center gap-2 text-sm font-bold text-slate-800">
                       <Palette size={16} className="text-blue-500" />
-                      3. 选择工业风格
+                      3. 选择工业风格与氛围
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                      <input 
-                        type="checkbox" 
-                        checked={isCoveredPools}
-                        onChange={(e) => setIsCoveredPools(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                      />
-                      <span className={`text-xs font-medium transition-colors ${isCoveredPools ? 'text-blue-700' : 'text-slate-500 group-hover:text-blue-600'}`}>
-                        池体加盖
-                      </span>
-                    </label>
+                    
+                    <div className="flex flex-wrap gap-x-4 gap-y-2">
+                        {/* Dusk Toggle */}
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input 
+                            type="checkbox" 
+                            checked={isDuskMode}
+                            onChange={handleDuskChange}
+                            className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                          />
+                          <span className={`text-xs font-medium flex items-center gap-1 transition-colors ${isDuskMode ? 'text-purple-700' : 'text-slate-500 group-hover:text-purple-600'}`}>
+                            <Moon size={12} className={isDuskMode ? "fill-purple-700" : ""} />
+                            黄昏氛围
+                          </span>
+                        </label>
+
+                        {/* Night Toggle */}
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input 
+                            type="checkbox" 
+                            checked={isNightMode}
+                            onChange={handleNightChange}
+                            className="w-4 h-4 rounded border-slate-300 text-indigo-800 focus:ring-indigo-700 cursor-pointer"
+                          />
+                          <span className={`text-xs font-medium flex items-center gap-1 transition-colors ${isNightMode ? 'text-indigo-800' : 'text-slate-500 group-hover:text-indigo-800'}`}>
+                            <Stars size={12} className={isNightMode ? "fill-indigo-800" : ""} />
+                            夜景氛围
+                          </span>
+                        </label>
+
+                        {/* Covered Pools Toggle */}
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input 
+                            type="checkbox" 
+                            checked={isCoveredPools}
+                            onChange={(e) => setIsCoveredPools(e.target.checked)}
+                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                          <span className={`text-xs font-medium transition-colors ${isCoveredPools ? 'text-blue-700' : 'text-slate-500 group-hover:text-blue-600'}`}>
+                            池体加盖
+                          </span>
+                        </label>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2">
@@ -378,7 +397,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 4. Custom Prompt (Bound to Active Session) */}
+                {/* 4. Custom Prompt */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     4. 细节补充 {activeSession.status === AppStatus.SUCCESS ? "(优化当前图片)" : "(可选)"}

@@ -9,6 +9,12 @@ export const SUPPORTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'i
 export const DEFAULT_PROMPT_PREFIX = "作为一名专业的建筑可视化专家，请将这张线稿/草图转化为一张极其逼真的高质量实景效果图。";
 export const DEFAULT_PROMPT_SUFFIX = ""; // Suffix cleared as it is integrated into the specific prompt below for better control
 
+// New constant for Dusk mode
+export const DUSK_PROMPT = "Modern office building at dusk, glowing interior lights, warm lighting spilling out from windows, glass facade, dramatic sky with sunset colors, cinematic lighting, wet asphalt road reflection, hyper-realistic, 8k resolution, architectural photography, highly detailed, moody atmosphere.建筑外增加路灯，布局合理，柔和光线";
+
+// New constant for Night mode
+export const NIGHT_PROMPT = "等轴测视图，鸟瞰图，工业园区航拍，夜景，建筑可视化，写实风格，3D渲染，路灯，室内暖光，道路车流光轨，长曝光，黑色天空，Octane渲染，高细节，8k分辨率";
+
 export const RENDERING_TYPES: RenderOption[] = [
   { 
     id: 'aerial', 

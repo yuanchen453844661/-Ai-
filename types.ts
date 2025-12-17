@@ -37,6 +37,8 @@ export interface GenerateRequest {
   renderingType: string;
   renderingStyle: string;
   isCoveredPools: boolean;
+  isDuskMode: boolean; // Field for Dusk style checkbox
+  isNightMode: boolean; // Field for Night style checkbox
 }
 
 export interface GenerateResponse {

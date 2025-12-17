@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { UploadCloud, Image as ImageIcon } from 'lucide-react';
 import { MAX_FILE_SIZE_MB, SUPPORTED_MIME_TYPES } from '../constants';
@@ -6,7 +7,7 @@ import { ImageData } from '../types';
 interface UploadAreaProps {
   onImagesSelected: (images: ImageData[]) => void;
   isProcessing: boolean;
-  compact?: boolean; // New prop for compact mode
+  compact?: boolean; // Prop kept for compatibility but functionally we might not use compact mode anymore
 }
 
 const UploadArea: React.FC<UploadAreaProps> = ({ onImagesSelected, isProcessing, compact = false }) => {
@@ -15,10 +16,10 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onImagesSelected, isProcessing,
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    // Explicitly cast to File[] to ensure TypeScript correctly infers the type of elements
+    // Explicitly cast to File[] 
     const fileList = Array.from(files) as File[];
     
-    // Process all files with Promises
+    // Process files (Only take the first one effectively if multiple were somehow selected, but input will be single)
     const imagePromises = fileList.map((file) => {
       return new Promise<ImageData | null>((resolve) => {
         // Validation
@@ -59,31 +60,26 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onImagesSelected, isProcessing,
     });
 
     try {
-      // Wait for all files to be processed
       const results = await Promise.all(imagePromises);
-      
-      // Filter out failed uploads (nulls)
       const validImages = results.filter((img): img is ImageData => img !== null);
       
       if (validImages.length > 0) {
         onImagesSelected(validImages);
       }
     } catch (error) {
-      console.error("Batch upload processing error:", error);
+      console.error("Upload processing error:", error);
     }
 
-    // Reset input to allow selecting the same files again if needed
     event.target.value = '';
   }, [onImagesSelected]);
 
-  // Compact version for the thumbnail list "Add" button
+  // Compact version (if still used somewhere, though main usage is now large area)
   if (compact) {
     return (
-      <div className="relative group w-16 h-16 shrink-0 flex items-center justify-center border-2 border-dashed border-slate-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer" title="添加更多图片">
+      <div className="relative group w-16 h-16 shrink-0 flex items-center justify-center border-2 border-dashed border-slate-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer" title="替换图片">
         <input
           type="file"
           accept={SUPPORTED_MIME_TYPES.join(',')}
-          multiple
           onChange={handleFileChange}
           disabled={isProcessing}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
@@ -98,7 +94,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onImagesSelected, isProcessing,
       <input
         type="file"
         accept={SUPPORTED_MIME_TYPES.join(',')}
-        multiple // Enable multiple
+        // multiple removed to enforce single selection UI flow
         onChange={handleFileChange}
         disabled={isProcessing}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
@@ -110,7 +106,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({ onImagesSelected, isProcessing,
         </div>
         <div>
           <h3 className="text-lg font-semibold text-slate-800">上传总图或单体线稿</h3>
-          <p className="text-sm text-slate-500 mt-1">支持批量上传 · JPG, PNG, WEBP (最大 {MAX_FILE_SIZE_MB}MB)</p>
+          <p className="text-sm text-slate-500 mt-1">支持 JPG, PNG, WEBP (最大 {MAX_FILE_SIZE_MB}MB)</p>
         </div>
         <div className="flex gap-4 mt-2">
           <div className="flex items-center gap-1 text-xs text-slate-400 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">
