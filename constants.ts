@@ -1,7 +1,7 @@
 
 import { RenderOption } from "./types";
 
-export const APP_NAME = "RealVision AI";
+export const APP_NAME = "华设效果图大师";
 export const MAX_FILE_SIZE_MB = 10;
 export const SUPPORTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
 

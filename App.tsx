@@ -4,11 +4,15 @@ import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palett
 import Header from './components/Header';
 import UploadArea from './components/UploadArea';
 import ResultViewer from './components/ResultViewer';
+import IntroAnimation from './components/IntroAnimation';
 import { generateRealisticImage } from './services/geminiService';
 import { AppStatus, ImageData, Session } from './types';
 import { RENDERING_TYPES, INDUSTRIAL_STYLES, SUPPORTED_MIME_TYPES, MAX_FILE_SIZE_MB } from './constants';
 
 const App: React.FC = () => {
+  // Intro Animation State
+  const [showIntro, setShowIntro] = useState(true);
+
   // Global Settings
   const [selectedType, setSelectedType] = useState<string>(RENDERING_TYPES[0].value);
   const [selectedStyle, setSelectedStyle] = useState<string>(INDUSTRIAL_STYLES[0].value);
@@ -161,6 +165,10 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-700">
+      
+      {/* Intro Animation Overlay */}
+      {showIntro && <IntroAnimation onComplete={() => setShowIntro(false)} />}
+
       <Header />
 
       {/* Image Zoom Modal */}
