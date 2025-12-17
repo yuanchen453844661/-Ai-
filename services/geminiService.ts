@@ -17,13 +17,12 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
     // Initialize inside the function
     const ai = new GoogleGenAI({ apiKey: apiKey });
     
-    const { image, prompt, renderingType, renderingStyle, isCoveredPools } = request;
+    const { image, referenceImage, prompt, renderingType, renderingStyle, isCoveredPools } = request;
 
-    // Remove the data URL prefix (e.g., "data:image/png;base64,") to get raw base64
+    // Remove the data URL prefix to get raw base64
     const base64Data = image.base64.split(',')[1];
 
-    // Construct a specific prompt based on user selection
-    const finalPrompt = `
+    let finalPrompt = `
       ${DEFAULT_PROMPT_PREFIX}
       
       【关键配置 Key Configuration】:
@@ -36,22 +35,47 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       ${DEFAULT_PROMPT_SUFFIX}
     `;
 
+    // If a reference image is provided, update the prompt to explain the relationship
+    if (referenceImage) {
+      finalPrompt = `
+      [指令 Instruction]: 请结合提供的两张图片生成一张新的实景图。
+      - 图片 1 (Image 1) 是建筑的【正视图/主视图】(Front View / Main View)。
+      - 图片 2 (Image 2) 是建筑的【侧视图/参考图】(Side View / Reference View)。
+      
+      [任务 Task]: 基于这两张图片的结构信息，构建该建筑的 3D 空间关系，并生成一张【人视视角 (Eye-level Perspective)】的实景效果图。
+      请确保建筑的门窗位置、轮廓结构与两张参考图严格一致。
+      
+      ${finalPrompt}
+      `;
+    }
+
     console.log("Sending request to Gemini model...");
 
+    const parts: any[] = [
+      { text: finalPrompt },
+      {
+        inlineData: {
+          mimeType: image.mimeType,
+          data: base64Data,
+        },
+      }
+    ];
+
+    // Add secondary image if it exists
+    if (referenceImage) {
+      const referenceBase64 = referenceImage.base64.split(',')[1];
+      parts.push({
+        inlineData: {
+          mimeType: referenceImage.mimeType,
+          data: referenceBase64,
+        },
+      });
+    }
+
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: 'gemini-2.5-flash-image', // supports multi-image
       contents: {
-        parts: [
-          {
-            text: finalPrompt,
-          },
-          {
-            inlineData: {
-              mimeType: image.mimeType,
-              data: base64Data,
-            },
-          },
-        ],
+        parts: parts,
       },
     });
 
@@ -86,7 +110,7 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       throw new Error("API 密钥无效或未配置。请检查 Vercel 环境变量。");
     }
 
-    // 2. Handle Quota Exceeded (429) - This is your current issue
+    // 2. Handle Quota Exceeded (429)
     if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED") || errorMessage.includes("quota")) {
       throw new Error("API 调用配额已耗尽 (429)。您的 Gemini API 免费额度已用完，请稍后再试，或在 Google AI Studio 更换新的 API Key。");
     }

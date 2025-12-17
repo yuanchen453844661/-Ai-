@@ -16,6 +16,7 @@ export interface ImageData {
 export interface Session {
   id: string;
   original: ImageData;
+  referenceImage?: ImageData | null; // New: For Side View or additional context
   generated: string | null;
   status: AppStatus;
   prompt: string; // Per-image prompt/notes
@@ -31,6 +32,7 @@ export interface RenderOption {
 
 export interface GenerateRequest {
   image: ImageData;
+  referenceImage?: ImageData | null; // New field
   prompt: string;
   renderingType: string;
   renderingStyle: string;

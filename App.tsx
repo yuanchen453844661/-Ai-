@@ -1,16 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus } from 'lucide-react';
+import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus, ImagePlus, Trash2 } from 'lucide-react';
 import Header from './components/Header';
 import UploadArea from './components/UploadArea';
 import ResultViewer from './components/ResultViewer';
 import { generateRealisticImage } from './services/geminiService';
 import { AppStatus, ImageData, Session } from './types';
-import { RENDERING_TYPES, INDUSTRIAL_STYLES } from './constants';
+import { RENDERING_TYPES, INDUSTRIAL_STYLES, SUPPORTED_MIME_TYPES, MAX_FILE_SIZE_MB } from './constants';
 
 const App: React.FC = () => {
-  // Global Settings (Shared across sessions for convenience, or could be per session)
-  // For better UX in batch processing workflows, keeping styling global is often better.
+  // Global Settings
   const [selectedType, setSelectedType] = useState<string>(RENDERING_TYPES[0].value);
   const [selectedStyle, setSelectedStyle] = useState<string>(INDUSTRIAL_STYLES[0].value);
   const [isCoveredPools, setIsCoveredPools] = useState<boolean>(false);
@@ -18,13 +17,20 @@ const App: React.FC = () => {
   // Session State
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  
+  // UI State for Clear Confirmation
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState<boolean>(false);
 
   const activeSession = sessions.find(s => s.id === activeSessionId) || null;
+
+  // Helper to determine if we are in "Eye Level" mode which supports 2 images
+  const isEyeLevelMode = selectedType === RENDERING_TYPES.find(t => t.id === 'eye-level')?.value;
 
   const handleImagesSelected = (newImages: ImageData[]) => {
     const newSessions: Session[] = newImages.map(img => ({
       id: img.id,
       original: img,
+      referenceImage: null,
       generated: null,
       status: AppStatus.IDLE,
       prompt: "",
@@ -33,23 +39,26 @@ const App: React.FC = () => {
 
     setSessions(prev => [...prev, ...newSessions]);
     
-    // If no active session, select the first new one
     if (!activeSessionId && newSessions.length > 0) {
       setActiveSessionId(newSessions[0].id);
     } else if (newSessions.length > 0 && sessions.length === 0) {
-       // Just to be safe
        setActiveSessionId(newSessions[0].id);
     }
   };
 
   const handleRemoveSession = (e: React.MouseEvent, idToRemove: string) => {
-    e.stopPropagation(); // Prevent selecting the session when clicking remove
+    e.preventDefault();
+    e.stopPropagation();
     const newSessions = sessions.filter(s => s.id !== idToRemove);
     setSessions(newSessions);
 
     if (activeSessionId === idToRemove) {
-      // If we removed the active one, select the last one or null
       setActiveSessionId(newSessions.length > 0 ? newSessions[newSessions.length - 1].id : null);
+    }
+    
+    // Reset clear confirm if list becomes empty
+    if (newSessions.length === 0) {
+        setIsClearConfirmOpen(false);
     }
   };
 
@@ -62,13 +71,41 @@ const App: React.FC = () => {
     updateActiveSession({ prompt: val });
   };
 
+  // Handler for uploading the secondary reference image (Side View)
+  const handleReferenceImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !activeSessionId) return;
+
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      alert(`文件过大，请上传小于 ${MAX_FILE_SIZE_MB}MB 的图片`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const refImage: ImageData = {
+        id: "ref_" + Date.now(),
+        base64: result,
+        mimeType: file.type,
+        url: URL.createObjectURL(file)
+      };
+      updateActiveSession({ referenceImage: refImage });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = ''; // Reset
+  };
+
+  const handleRemoveReferenceImage = () => {
+    updateActiveSession({ referenceImage: null });
+  };
+
   const handleGenerate = async () => {
     if (!activeSession) return;
 
     // Determine source image (Original or Refinement)
     let sourceImage = activeSession.original;
     
-    // If optimizing existing result
     if (activeSession.status === AppStatus.SUCCESS && activeSession.generated) {
       const mimeType = activeSession.generated.split(';')[0].split(':')[1] || 'image/png';
       sourceImage = {
@@ -84,6 +121,7 @@ const App: React.FC = () => {
     try {
       const result = await generateRealisticImage({
         image: sourceImage,
+        referenceImage: isEyeLevelMode ? activeSession.referenceImage : null, // Only send ref image in supported modes
         prompt: activeSession.prompt.trim(),
         renderingType: selectedType,
         renderingStyle: selectedStyle,
@@ -110,15 +148,28 @@ const App: React.FC = () => {
   };
 
   const handleResetActive = () => {
-      // Reset logic for the ResultViewer (similar to Discard but maybe clearer intent)
       handleDiscardResult();
   };
 
-  const handleClearAll = () => {
-    if (confirm("确定要移除所有图片吗？")) {
-        setSessions([]);
-        setActiveSessionId(null);
-    }
+  // New inline clear handlers
+  const handleTriggerClear = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsClearConfirmOpen(true);
+  };
+
+  const handleConfirmClear = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveSessionId(null);
+    setSessions([]);
+    setIsClearConfirmOpen(false);
+  };
+
+  const handleCancelClear = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsClearConfirmOpen(false);
   };
 
   return (
@@ -149,12 +200,35 @@ const App: React.FC = () => {
               <div className="flex items-center justify-between mb-2">
                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <ImageIcon className="text-blue-500" size={20}/>
-                    {sessions.length > 0 ? "1. 图片列表" : "上传线稿"}
+                    {sessions.length > 0 ? "1. 主视图列表 (正视图)" : "上传正视图/线稿"}
                  </h2>
                  {sessions.length > 0 && (
-                    <button onClick={handleClearAll} className="text-xs text-red-500 hover:text-red-700 hover:underline">
-                        清空列表
-                    </button>
+                    isClearConfirmOpen ? (
+                        <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100 animate-in fade-in zoom-in duration-200">
+                            <span className="text-xs text-red-600 font-medium">确定清空?</span>
+                            <button 
+                              onClick={handleConfirmClear}
+                              className="text-xs bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600 transition-colors shadow-sm"
+                            >
+                              是
+                            </button>
+                            <button 
+                              onClick={handleCancelClear}
+                              className="text-xs text-slate-500 hover:text-slate-700 px-1"
+                            >
+                              否
+                            </button>
+                        </div>
+                    ) : (
+                        <button 
+                          type="button"
+                          onClick={handleTriggerClear} 
+                          className="text-xs text-red-500 hover:text-red-700 hover:underline px-2 py-1 rounded hover:bg-red-50 transition-colors flex items-center gap-1"
+                        >
+                            <Trash2 size={12} />
+                            清空列表
+                        </button>
+                    )
                  )}
               </div>
 
@@ -186,6 +260,7 @@ const App: React.FC = () => {
 
                         {/* Remove Button */}
                         <button 
+                            type="button"
                             onClick={(e) => handleRemoveSession(e, session.id)}
                             className="absolute top-0 right-0 bg-slate-900/50 hover:bg-red-500 text-white p-0.5 rounded-bl-md opacity-0 hover:opacity-100 group-hover:opacity-100 transition-opacity"
                         >
@@ -213,6 +288,7 @@ const App: React.FC = () => {
                     {RENDERING_TYPES.map((type) => (
                       <button
                         key={type.id}
+                        type="button"
                         onClick={() => setSelectedType(type.value)}
                         disabled={activeSession.status === AppStatus.PROCESSING}
                         className={`text-xs py-2 px-2 rounded-lg border transition-all truncate ${
@@ -226,6 +302,40 @@ const App: React.FC = () => {
                       </button>
                     ))}
                   </div>
+
+                  {/* Dynamic Section: Side View Uploader - ONLY for Eye Level */}
+                  {isEyeLevelMode && activeSession.status !== AppStatus.PROCESSING && (
+                    <div className="mt-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100 animate-fade-in">
+                       <label className="flex items-center justify-between text-xs font-semibold text-blue-800 mb-2">
+                          <span className="flex items-center gap-1"><ImagePlus size={14}/> 补充侧视图 (可选)</span>
+                          {activeSession.referenceImage && (
+                            <button onClick={handleRemoveReferenceImage} className="text-red-500 hover:underline">移除</button>
+                          )}
+                       </label>
+                       
+                       {!activeSession.referenceImage ? (
+                         <div className="relative group flex items-center justify-center border-2 border-dashed border-blue-200 rounded-md bg-white hover:bg-blue-50 h-16 cursor-pointer transition-colors">
+                            <input 
+                              type="file" 
+                              accept={SUPPORTED_MIME_TYPES.join(',')}
+                              onChange={handleReferenceImageUpload}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
+                            <span className="text-xs text-blue-400 group-hover:text-blue-600 flex items-center gap-1">
+                              <Plus size={14} /> 点击上传侧视图以辅助生成
+                            </span>
+                         </div>
+                       ) : (
+                         <div className="flex items-center gap-3 bg-white p-2 rounded border border-blue-200">
+                            <img src={activeSession.referenceImage.url} alt="Ref" className="w-10 h-10 object-cover rounded bg-slate-100" />
+                            <div className="flex-1 min-w-0">
+                               <p className="text-xs font-medium text-slate-700 truncate">侧视图已上传</p>
+                               <p className="text-[10px] text-slate-400">将结合主视图共同生成</p>
+                            </div>
+                         </div>
+                       )}
+                    </div>
+                  )}
                 </div>
 
                 {/* 2. Style Selection */}
@@ -252,6 +362,7 @@ const App: React.FC = () => {
                     {INDUSTRIAL_STYLES.map((style) => (
                       <button
                         key={style.id}
+                        type="button"
                         onClick={() => setSelectedStyle(style.value)}
                         disabled={activeSession.status === AppStatus.PROCESSING}
                         className={`text-xs py-2 px-3 rounded-lg border text-left transition-all ${
@@ -289,6 +400,7 @@ const App: React.FC = () => {
                 )}
 
                 <button
+                  type="button"
                   onClick={handleGenerate}
                   disabled={activeSession.status === AppStatus.PROCESSING}
                   className={`w-full py-3.5 px-6 rounded-lg font-semibold text-white shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] ${
@@ -312,13 +424,17 @@ const App: React.FC = () => {
                   ) : (
                     <>
                       <Wand2 size={20} />
-                      开始渲染
+                      {isEyeLevelMode && activeSession.referenceImage ? "融合双图并渲染" : "开始渲染"}
                     </>
                   )}
                 </button>
                 
                 {activeSession.status === AppStatus.SUCCESS && (
-                     <button onClick={handleDiscardResult} className="w-full py-2 text-sm text-slate-500 hover:text-red-600 flex items-center justify-center gap-1 transition-colors">
+                     <button 
+                       type="button"
+                       onClick={handleDiscardResult} 
+                       className="w-full py-2 text-sm text-slate-500 hover:text-red-600 flex items-center justify-center gap-1 transition-colors"
+                     >
                         <RefreshCw size={14} />
                         不满意，放弃当前结果并重置
                      </button>
@@ -351,7 +467,7 @@ const App: React.FC = () => {
                         </div>
                       </div>
                       <p className="animate-pulse">
-                          {activeSession.generated ? "正在根据指令细化..." : "正在构建空间材质与光影..."}
+                          {activeSession.generated ? "正在根据指令细化..." : (isEyeLevelMode && activeSession.referenceImage ? "正在融合双视角信息..." : "正在构建空间材质与光影...")}
                       </p>
                     </div>
                   ) : activeSession.generated ? (
@@ -362,8 +478,13 @@ const App: React.FC = () => {
                     />
                   ) : (
                     <div className="w-full h-full rounded-xl bg-slate-100/50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 gap-2">
-                        <img src={activeSession.original.url} className="w-32 h-32 object-contain opacity-50 mb-2 grayscale" alt="placeholder" />
-                        <p>准备就绪，请点击“开始渲染”</p>
+                        <div className="flex gap-4 mb-2">
+                            <img src={activeSession.original.url} className="w-32 h-32 object-contain opacity-80 shadow-sm bg-white rounded border p-1" alt="Front" />
+                            {activeSession.referenceImage && (
+                                <img src={activeSession.referenceImage.url} className="w-32 h-32 object-contain opacity-80 shadow-sm bg-white rounded border p-1" alt="Side" />
+                            )}
+                        </div>
+                        <p>准备就绪，请点击“{isEyeLevelMode && activeSession.referenceImage ? "融合双图并渲染" : "开始渲染"}”</p>
                     </div>
                   )}
                 </div>
