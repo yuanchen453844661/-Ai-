@@ -28,7 +28,12 @@ export const RENDERING_TYPES: RenderOption[] = [
     value: '识别图中的门和窗户轮廓，生成一张人视视角的效果图，能够同时看到建筑的多个面（结合正视图与侧视图信息）。布局合理，严格限制门和窗户的位置不变，严格限制外轮廓不变，现代建筑，白色真石漆外立面，建筑表面真实反射，有局部高光，提高真实摄影质感，明媚的光线，电影级别的光线，分析合理，高级感; 建筑周围增加景观布置，阳光明媚的白天，蓝天，布局合理， photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
     description: '模拟人眼观看，支持正侧双图合成' 
   },
-  { id: 'color-plan', label: '彩平图', value: 'Architectural colored site plan, top-down 2D view with realistic textures and shadows', description: '带材质的平面布置' },
+  { 
+    id: 'color-plan', 
+    label: '彩平图', 
+    value: '根据这张图的用地地形，生成一个污水厂彩平图，两个出入口，增加绿化和景观，保持用地轮廓和建筑位置和道路位置不变，能看到周边的环境，不要改变用地形状。污水厂建筑，具有真实感的质感。Architectural colored site plan, top-down 2D view, realistic textures, soft shadows, detailed landscaping, lush greenery, professional master plan, high resolution, 8k.', 
+    description: '带材质的平面布置' 
+  },
   { 
     id: 'top', 
     label: '俯视图', 
