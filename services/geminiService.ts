@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { GenerateRequest, GenerateResponse } from "../types";
 import { DEFAULT_PROMPT_PREFIX, DEFAULT_PROMPT_SUFFIX } from "../constants";
@@ -16,7 +17,7 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
     // Initialize inside the function
     const ai = new GoogleGenAI({ apiKey: apiKey });
     
-    const { image, prompt, renderingType, renderingStyle } = request;
+    const { image, prompt, renderingType, renderingStyle, isCoveredPools } = request;
 
     // Remove the data URL prefix (e.g., "data:image/png;base64,") to get raw base64
     const base64Data = image.base64.split(',')[1];
@@ -25,8 +26,11 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
     const finalPrompt = `
       ${DEFAULT_PROMPT_PREFIX}
       
-      【视图类型 Viewpoint】: ${renderingType}
-      【设计风格 Style】: ${renderingStyle}
+      【关键配置 Key Configuration】:
+      - 视图 Viewpoint: ${renderingType}
+      - 风格 Style: ${renderingStyle}
+      ${isCoveredPools ? '- 特殊结构: 所有污水处理池必须加盖 (Ensure all sewage treatment pools are covered with modern architectural structures/domes. No open water tanks).' : ''}
+
       【用户特定描述 User Description】: ${prompt || "Standard sewage treatment plant facility."}
       
       ${DEFAULT_PROMPT_SUFFIX}

@@ -1,3 +1,4 @@
+
 import { RenderOption } from "./types";
 
 export const APP_NAME = "RealVision AI";
@@ -9,7 +10,12 @@ export const DEFAULT_PROMPT_PREFIX = "作为一名专业的建筑可视化专家
 export const DEFAULT_PROMPT_SUFFIX = "画面要求：8k分辨率，电影级光影，极度细节，照片级真实感，包含真实的环境遮蔽和材质纹理。";
 
 export const RENDERING_TYPES: RenderOption[] = [
-  { id: 'aerial', label: '鸟瞰图', value: 'High-angle aerial view drone shot, showing the entire layout and surrounding environment', description: '适合展示整体布局' },
+  { 
+    id: 'aerial', 
+    label: '鸟瞰图', 
+    value: '根据这张图的用地地形，生成一个现代污水厂，两个出入口，保持轮廓和道路位置不变。Aerial view, bird\'s-eye view, modern sewage treatment plant, industrial park layout,flat white roofs, Manicured landscape, lush green trees surrounding buildings, organized asphalt roads, lawns, clean water surfaces, sunny day, clear blue sky, soft natural lighting, Architectural visualization, photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
+    description: '整体布局，保留地形轮廓' 
+  },
   { id: 'eye-level', label: '人视图', value: 'Eye-level perspective shot, as seen by a pedestrian standing on the ground', description: '模拟人眼观看角度' },
   { id: 'color-plan', label: '彩平图', value: 'Architectural colored site plan, top-down 2D view with realistic textures and shadows', description: '带材质的平面布置' },
   { id: 'top', label: '俯视图', value: 'Direct top-down view (roof plan), satellite style', description: '垂直向下的视图' },
@@ -18,6 +24,7 @@ export const RENDERING_TYPES: RenderOption[] = [
 ];
 
 export const INDUSTRIAL_STYLES: RenderOption[] = [
+  { id: 'none', label: '无 (保留原结构)', value: 'Clean architectural structure, no specific industrial style overlay, keep original structural design simplicity', description: '不指定特定风格' },
   { id: 'modern-tech', label: '现代科技工业风', value: 'Modern high-tech industrial style, sleek metallic finishes, glass facades, blue mood lighting, clean concrete, futuristic sewage treatment plant aesthetic', description: '金属、玻璃、科技感' },
   { id: 'eco-garden', label: '生态园林化风格', value: 'Eco-friendly garden factory style, sewage treatment plant integrated with lush greenery, vertical gardens, wooden elements, sustainable architecture, park-like atmosphere', description: '绿植融合、公园化' },
   { id: 'minimalist', label: '极简清水混凝土', value: 'Minimalist brutalist style, exposed raw concrete (béton brut), clean geometric lines, soft daylight, high-end architectural gallery feel', description: '素雅、几何感、高级灰' },

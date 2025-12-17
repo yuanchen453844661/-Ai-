@@ -1,3 +1,4 @@
+
 export enum AppStatus {
   IDLE = 'IDLE',
   PROCESSING = 'PROCESSING',
@@ -6,9 +7,19 @@ export enum AppStatus {
 }
 
 export interface ImageData {
+  id: string; // Unique ID for tracking
   base64: string;
   mimeType: string;
   url: string; // Blob URL for preview
+}
+
+export interface Session {
+  id: string;
+  original: ImageData;
+  generated: string | null;
+  status: AppStatus;
+  prompt: string; // Per-image prompt/notes
+  error?: string | null;
 }
 
 export interface RenderOption {
@@ -23,6 +34,7 @@ export interface GenerateRequest {
   prompt: string;
   renderingType: string;
   renderingStyle: string;
+  isCoveredPools: boolean;
 }
 
 export interface GenerateResponse {
