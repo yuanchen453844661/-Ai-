@@ -13,7 +13,7 @@ export const DEFAULT_PROMPT_SUFFIX = ""; // Suffix cleared as it is integrated i
 export const DUSK_PROMPT = "Modern office building at dusk, glowing interior lights, warm lighting spilling out from windows, glass facade, dramatic sky with sunset colors, cinematic lighting, wet asphalt road reflection, hyper-realistic, 8k resolution, architectural photography, highly detailed, moody atmosphere.建筑外增加路灯，布局合理，柔和光线";
 
 // New constant for Night mode
-export const NIGHT_PROMPT = "等轴测视图，鸟瞰图，工业园区航拍，夜景，建筑可视化，写实风格，3D渲染，路灯，室内暖光，道路车流光轨，长曝光，黑色天空，Octane渲染，高细节，8k分辨率";
+export const NIGHT_PROMPT = "夜景，建筑可视化，写实风格，3D渲染，路灯，室内暖光，道路车流光轨，长曝光，黑色天空，Octane渲染，高细节，8k分辨率";
 
 export const RENDERING_TYPES: RenderOption[] = [
   { 
