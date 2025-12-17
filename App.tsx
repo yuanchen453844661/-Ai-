@@ -5,6 +5,7 @@ import Header from './components/Header';
 import UploadArea from './components/UploadArea';
 import ResultViewer from './components/ResultViewer';
 import IntroAnimation from './components/IntroAnimation';
+import DrawingAnimation from './components/DrawingAnimation';
 import { generateRealisticImage } from './services/geminiService';
 import { AppStatus, ImageData, Session } from './types';
 import { RENDERING_TYPES, INDUSTRIAL_STYLES, SUPPORTED_MIME_TYPES, MAX_FILE_SIZE_MB } from './constants';
@@ -486,16 +487,8 @@ const App: React.FC = () => {
                           请在左侧选择一张图片开始
                       </div>
                   ) : activeSession.status === AppStatus.PROCESSING ? (
-                    <div className="w-full h-full rounded-xl bg-white border border-slate-200 flex flex-col items-center justify-center text-slate-400 gap-4">
-                      <div className="relative">
-                        <div className="w-16 h-16 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <Wand2 size={20} className="text-blue-600 animate-pulse" />
-                        </div>
-                      </div>
-                      <p className="animate-pulse">
-                          {activeSession.generated ? "正在根据指令细化..." : (isEyeLevelMode && activeSession.referenceImage ? "正在融合双视角信息..." : "正在构建空间材质与光影...")}
-                      </p>
+                    <div className="w-full h-full rounded-xl bg-white border border-slate-200 flex flex-col items-center justify-center text-slate-400 overflow-hidden">
+                       <DrawingAnimation />
                     </div>
                   ) : activeSession.generated ? (
                     <ResultViewer 
