@@ -19,7 +19,7 @@ export const RENDERING_TYPES: RenderOption[] = [
   { 
     id: 'aerial', 
     label: '鸟瞰图', 
-    value: '根据这张图的用地地形，生成一个现代污水厂，两个出入口，保持轮廓和道路位置不变。Low altitude aerial view, drone shot from lower angle, modern sewage treatment plant, industrial park layout,flat white roofs, Manicured landscape, lush green trees surrounding buildings, organized asphalt roads, lawns, clean water surfaces, sunny day, clear blue sky, soft natural lighting, Architectural visualization, photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
+    value: '根据这张图的用地地形，生成一个现代污水厂，保持轮廓和道路位置不变。原始平面图的边缘是美观的栏杆形式围墙，围墙外只有绿化景观，出入口根据平面图布置，布局合理。Low altitude aerial view, drone shot from lower angle, modern sewage treatment plant, industrial park layout, flat white roofs, beautiful railing-style perimeter fences, lush green landscaping outside the fence, entrances precisely placed according to the original layout, rational and organized site design, Manicured landscape, lush green trees surrounding buildings, organized asphalt roads, lawns, clean water surfaces, sunny day, clear blue sky, soft natural lighting, Architectural visualization, photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
     description: '整体布局，保留地形轮廓' 
   },
   { 
