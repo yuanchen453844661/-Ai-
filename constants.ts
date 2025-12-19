@@ -3,7 +3,7 @@ import { RenderOption } from "./types";
 
 export const APP_NAME = "华设效果图大师";
 export const MAX_FILE_SIZE_MB = 10;
-export const SUPPORTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+export const SUPPORTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf'];
 
 // Updated base prompt for industrial/architectural context
 export const DEFAULT_PROMPT_PREFIX = "作为一名专业的建筑可视化专家，请将这张线稿/草图转化为一张极其逼真的高质量实景效果图。";
