@@ -17,6 +17,12 @@ export const NIGHT_PROMPT = "夜景，建筑可视化，写实风格，3D渲染�
 
 export const RENDERING_TYPES: RenderOption[] = [
   { 
+    id: 'site-integration',
+    label: '实景融合图',
+    value: '这是一个实景融合任务。请严格执行以下指令：1. 保持红线范围外的环境完全不变；2. 将红线内的区域改造为现代社区公园，景观线条灵动优美；3. 公园内加入正在玩耍的小孩和散步的老人，充满活力；4. 模拟真实的户外阳光和树影投射的光影效果，材质饱和度自然真实；5. 在草地间增加雨水花园，在儿童游乐区旁增加茂密的遮阴树；6. 最终图像为高清且细节丰富，实现照片级画质，并完全去除红线痕迹。Photorealistic community park integration, modern landscape architecture, rain gardens, playground with shade trees, people interacting with nature, realistic sunlight and leaf shadows, high resolution, 8k, cinematic lighting.',
+    description: '红线内外分区改造与融合'
+  },
+  { 
     id: 'aerial', 
     label: '鸟瞰图', 
     value: '根据这张图的用地地形，生成一个现代污水厂，保持轮廓和道路位置不变。原始平面图的边缘是美观的栏杆形式围墙，围墙外只有绿化景观，出入口根据平面图布置，布局合理。Low altitude aerial view, drone shot from lower angle, modern sewage treatment plant, industrial park layout, flat white roofs, beautiful railing-style perimeter fences, lush green landscaping outside the fence, entrances precisely placed according to the original layout, rational and organized site design, Manicured landscape, lush green trees surrounding buildings, organized asphalt roads, lawns, clean water surfaces, sunny day, clear blue sky, soft natural lighting, Architectural visualization, photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
@@ -28,23 +34,11 @@ export const RENDERING_TYPES: RenderOption[] = [
     value: '识别图中的门和窗户轮廓，生成一张人视视角的效果图，能够同时看到建筑的多个面（结合正视图与侧视图信息）。布局合理，严格限制门和窗户的位置不变，严格限制外轮廓不变，现代建筑，白色真石漆外立面，建筑表面真实反射，有局部高光，提高真实摄影质感，明媚的光线，电影级别的光线，分析合理，高级感; 建筑周围增加景观布置，阳光明媚的白天，蓝天，布局合理， photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
     description: '模拟人眼观看，支持正侧双图合成' 
   },
-  {
-    id: 'site-integration',
-    label: '实景融合图',
-    value: '这是一个实景融合任务。请严格执行以下指令：1. 保持红线范围外的环境完全不变；2. 将红线内的区域改造为现代社区公园，景观线条灵动优美；3. 公园内加入正在玩耍的小孩和散步的老人，充满活力；4. 模拟真实的户外阳光和树影投射的光影效果，材质饱和度自然真实；5. 在草地间增加雨水花园，在儿童游乐区旁增加茂密的遮阴树；6. 最终图像为高清且细节丰富，实现照片级画质，并完全去除红线痕迹。Photorealistic community park integration, modern landscape architecture, rain gardens, playground with shade trees, people interacting with nature, realistic sunlight and leaf shadows, high resolution, 8k, cinematic lighting.',
-    description: '红线内外分区改造与融合'
-  },
   { 
     id: 'color-plan', 
     label: '彩平图', 
     value: '根据这张图的用地地形，生成一个污水厂彩平图，两个出入口，增加绿化和景观，保持用地轮廓和建筑位置和道路位置不变，能看到周边的环境，不要改变用地形状。污水厂建筑，具有真实感的质感。Architectural colored site plan, top-down 2D view, realistic textures, soft shadows, detailed landscaping, lush greenery, professional master plan, high resolution, 8k.', 
     description: '带材质的平面布置' 
-  },
-  { 
-    id: 'top', 
-    label: '俯视图', 
-    value: '俯视图。识别图中的门和窗户轮廓，生成一张效果图，布局合理，严格限制门和窗户的位置不变，严格限制外轮廓不变，现代建筑，白色真石漆外立面，建筑表面真实反射，有局部高光，提高真实摄影质感，明媚的光线，电影级别的光线，分析合理，高级感; 建筑周围增加景观布置，阳光明媚的白天，蓝天，布局合理， photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
-    description: '垂直向下的视图' 
   },
   { 
     id: 'front', 

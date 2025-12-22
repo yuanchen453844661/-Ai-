@@ -67,7 +67,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
           <div className="flex items-center justify-center gap-3 text-slate-300 bg-slate-900/50 px-6 py-2 rounded-full border border-slate-800 backdrop-blur-md">
             <Droplets size={18} className="text-cyan-400" />
             <span className="text-sm md:text-lg font-light tracking-widest text-cyan-50">
-              制作人：生态与水环境治理部
+              制作人：生态与环保事业部
             </span>
           </div>
         </div>
