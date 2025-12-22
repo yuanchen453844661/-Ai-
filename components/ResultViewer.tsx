@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Download, Maximize2, X } from 'lucide-react';
 
@@ -31,9 +32,6 @@ const ResultViewer: React.FC<ResultViewerProps> = ({ originalUrl, generatedUrl, 
         className="fixed inset-0 z-50 bg-slate-900/95 flex flex-col items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out"
         onClick={toggleFullScreen}
       >
-        <button onClick={toggleFullScreen} className="absolute top-4 right-4 text-white hover:text-blue-400 p-2 transition-colors z-50">
-          <X size={32} />
-        </button>
         <img 
           src={generatedUrl} 
           alt="Full Screen Generated" 

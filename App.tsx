@@ -51,8 +51,7 @@ const App: React.FC = () => {
   const handleRemoveSession = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // 使用 window.confirm 确保浏览器兼容性，并提高交互响应
-    if (window.confirm && !window.confirm("确定要移除这张图片吗？")) return;
+    if (window.confirm && !window.confirm("确定要移除并替换当前图片吗？")) return;
     setSessions([]);
     setActiveSessionId(null);
   };
@@ -158,18 +157,18 @@ const App: React.FC = () => {
       {showIntro && <IntroAnimation onComplete={() => setShowIntro(false)} />}
       <Header />
 
+      {/* 纯净的预览放大层 - 无按钮遮挡 */}
       {zoomedImageUrl && (
         <div 
-            className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 cursor-zoom-out"
             onClick={() => setZoomedImageUrl(null)}
         >
-            <button 
-                className="absolute top-4 right-4 text-white/70 hover:text-white p-2 transition-colors"
-                onClick={() => setZoomedImageUrl(null)}
-            >
-                <X size={32} />
-            </button>
-            <img src={zoomedImageUrl} alt="Zoomed" className="max-w-full max-h-full object-contain shadow-2xl rounded-sm cursor-zoom-out" onClick={(e) => e.stopPropagation()} />
+            <img 
+              src={zoomedImageUrl} 
+              alt="Zoomed" 
+              className="max-w-full max-h-full object-contain shadow-2xl rounded-sm cursor-default" 
+              onClick={(e) => e.stopPropagation()} 
+            />
         </div>
       )}
 
@@ -199,30 +198,25 @@ const App: React.FC = () => {
               {sessions.length === 0 ? (
                 <UploadArea onImagesSelected={handleImagesSelected} isProcessing={false} />
               ) : (
-                <div className="relative w-full rounded-xl overflow-hidden border-2 border-slate-100 group bg-slate-50 hover:border-blue-200 transition-colors">
-                    {/* 控制按钮组：确保 z-index 足够高且能独立响应 */}
-                    <div className="absolute top-2 right-2 flex gap-2 z-[60]">
-                        <button 
-                          type="button"
-                          onClick={handleRemoveSession}
-                          className="p-2 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg shadow-md transition-all border border-slate-100 pointer-events-auto"
-                          title="移除图片"
-                        >
-                           <Trash2 size={18} />
-                        </button>
-                    </div>
-
+                <div className="relative w-full rounded-xl overflow-hidden border-2 border-slate-100 bg-slate-50 group">
+                    {/* 主视图预览及点击放大 */}
                     <div 
-                      className="relative h-64 w-full cursor-zoom-in bg-slate-100/50 flex items-center justify-center group/img"
+                      className="relative h-64 w-full cursor-zoom-in bg-slate-100/50 flex items-center justify-center"
                       onClick={() => setZoomedImageUrl(activeSession?.original.url || null)}
                     >
                        <img src={activeSession?.original.url} alt="Original" className="max-h-full max-w-full object-contain" />
-                       <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                          <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-full shadow-sm text-xs font-medium text-slate-600 flex items-center gap-1.5">
-                             <Maximize2 size={14} /> 点击放大
-                          </div>
-                       </div>
                     </div>
+
+                    {/* 移除/替换按钮 - 仅在侧边栏主视图悬浮显示，放大后不会出现 */}
+                    {activeSession?.status !== AppStatus.PROCESSING && (
+                      <button 
+                        onClick={handleRemoveSession}
+                        className="absolute top-2 right-2 p-2 bg-white/90 text-red-500 hover:text-white hover:bg-red-500 rounded-full shadow-md transition-all opacity-0 group-hover:opacity-100 z-20"
+                        title="删除并替换图片"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                     
                     {activeSession?.status === AppStatus.PROCESSING && (
                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center z-50">
@@ -276,7 +270,7 @@ const App: React.FC = () => {
                             </span>
                          </div>
                        ) : (
-                         <div className="flex items-center gap-3 bg-white p-2 rounded border border-blue-200">
+                         <div className="flex items-center gap-3 bg-white p-2 rounded border border-blue-200 relative group/ref">
                             <img src={activeSession.referenceImage.url} alt="Ref" className="w-12 h-12 object-cover rounded bg-slate-100 cursor-zoom-in border" onClick={() => setZoomedImageUrl(activeSession.referenceImage?.url || null)} />
                             <div className="flex-1 min-w-0">
                                <p className="text-xs font-medium text-slate-700 truncate">侧视图已就绪</p>
