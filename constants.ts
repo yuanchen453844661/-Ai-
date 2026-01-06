@@ -7,7 +7,7 @@ export const SUPPORTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'i
 
 // Updated base prompt for industrial/architectural context
 export const DEFAULT_PROMPT_PREFIX = "作为一名专业的建筑可视化专家，请将这张线稿/草图转化为一张极其逼真的高质量实景效果图。";
-export const DEFAULT_PROMPT_SUFFIX = ""; // Suffix cleared as it is integrated into the specific prompt below for better control
+export const DEFAULT_PROMPT_SUFFIX = ""; 
 
 // New constant for Dusk mode
 export const DUSK_PROMPT = "Modern office building at dusk, glowing interior lights, warm lighting spilling out from windows, glass facade, dramatic sky with sunset colors, cinematic lighting, wet asphalt road reflection, hyper-realistic, 8k resolution, architectural photography, highly detailed, moody atmosphere.建筑外增加路灯，布局合理，柔和光线";
@@ -19,7 +19,7 @@ export const RENDERING_TYPES: RenderOption[] = [
   { 
     id: 'site-integration',
     label: '实景融合图',
-    value: '这是一个实景融合任务。请严格执行以下指令：1. 保持红线范围外的环境完全不变；2. 将红线内的区域改造为现代社区公园，景观线条灵动优美；3. 公园内加入正在玩耍的小孩和散步的老人，充满活力；4. 模拟真实的户外阳光和树影投射的光影效果，材质饱和度自然真实；5. 在草地间增加雨水花园，在儿童游乐区旁增加茂密的遮阴树；6. 最终图像为高清且细节丰富，实现照片级画质，并完全去除红线痕迹。Photorealistic community park integration, modern landscape architecture, rain gardens, playground with shade trees, people interacting with nature, realistic sunlight and leaf shadows, high resolution, 8k, cinematic lighting.',
+    value: '这是一个实景融合任务。请执行以下指令：1. 保持红线范围外的环境完全不变；2. 将红线内的区域改为现代社区公园，景观线条灵动优美；3. 公园内加入正在玩耍的小孩和散步的老人，充满活力；4. 模拟真实的户外阳光和树影投射的光影效果，材质饱和度自然真实；5. 最终图像为高清且细节丰富，实现照片级画质；6. 完全去除画面中的红线痕迹。Photorealistic community park integration, keep area outside red line unchanged, modern landscape architecture, people interacting with nature, realistic sunlight and leaf shadows, high resolution, 8k, cinematic lighting.',
     description: '红线内外分区改造与融合'
   },
   { 
