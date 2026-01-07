@@ -49,6 +49,7 @@ const App: React.FC = () => {
   };
 
   const activeSession = sessions.find(s => s.id === activeSessionId) || null;
+  const isEyeLevelMode = selectedType === RENDERING_TYPES.find(t => t.id === 'eye-level')?.value;
 
   const handleImagesSelected = (newImages: ImageData[]) => {
     if (newImages.length === 0) return;
@@ -83,6 +84,34 @@ const App: React.FC = () => {
     updateActiveSession({ prompt: val });
   };
 
+  const handleReferenceImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !activeSessionId) return;
+
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      alert(`文件过大，请上传小于 ${MAX_FILE_SIZE_MB}MB 的图片`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const refImage: ImageData = {
+        id: "ref_" + Date.now(),
+        base64: result,
+        mimeType: file.type,
+        url: result
+      };
+      updateActiveSession({ referenceImage: refImage });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
+
+  const handleRemoveReferenceImage = () => {
+    updateActiveSession({ referenceImage: null });
+  };
+
   const handleDuskChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setIsDuskMode(checked);
@@ -103,7 +132,7 @@ const App: React.FC = () => {
     try {
       const result = await generateRealisticImage({
         image: activeSession.original,
-        referenceImage: null, 
+        referenceImage: activeSession.referenceImage, 
         prompt: activeSession.prompt.trim(),
         renderingType: selectedType,
         renderingStyle: selectedStyle,
@@ -273,6 +302,33 @@ const App: React.FC = () => {
                       </button>
                     ))}
                   </div>
+
+                  {isEyeLevelMode && activeSession.status !== AppStatus.PROCESSING && (
+                    <div className="mt-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100 animate-fade-in">
+                       <label className="flex items-center justify-between text-xs font-semibold text-blue-800 mb-2">
+                          <span className="flex items-center gap-1"><ImagePlus size={14}/> 补充侧视图 (可选)</span>
+                          {activeSession.referenceImage && (
+                            <button onClick={handleRemoveReferenceImage} className="text-red-500 hover:underline">移除</button>
+                          )}
+                       </label>
+                       
+                       {!activeSession.referenceImage ? (
+                         <div className="relative group flex items-center justify-center border-2 border-dashed border-blue-200 rounded-md bg-white hover:bg-blue-50 h-16 cursor-pointer transition-colors">
+                            <input type="file" accept={SUPPORTED_MIME_TYPES.join(',')} onChange={handleReferenceImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                            <span className="text-xs text-blue-400 group-hover:text-blue-600 flex items-center gap-1">
+                              <Plus size={14} /> 点击上传侧视图
+                            </span>
+                         </div>
+                       ) : (
+                         <div className="flex items-center gap-3 bg-white p-2 rounded border border-blue-200 relative group/ref">
+                            <img src={activeSession.referenceImage.url} alt="Ref" className="w-12 h-12 object-cover rounded bg-slate-100 cursor-zoom-in border" onClick={() => setZoomedImageUrl(activeSession.referenceImage?.url || null)} />
+                            <div className="flex-1 min-w-0">
+                               <p className="text-xs font-medium text-slate-700 truncate">侧视图已就绪</p>
+                            </div>
+                         </div>
+                       )}
+                    </div>
+                  )}
                 </div>
 
                 <div>

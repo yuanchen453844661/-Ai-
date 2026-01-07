@@ -13,7 +13,7 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
 
     const ai = new GoogleGenAI({ apiKey: apiKey });
     
-    const { image, prompt, renderingType, renderingStyle, isCoveredPools, isDuskMode, isNightMode } = request;
+    const { image, referenceImage, prompt, renderingType, renderingStyle, isCoveredPools, isDuskMode, isNightMode } = request;
 
     const base64Data = image.base64.split(',')[1];
 
@@ -24,7 +24,7 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       environmentPrompt = `- 环境氛围 (Night): ${NIGHT_PROMPT}`;
     }
 
-    const finalPrompt = `
+    let finalPrompt = `
       ${DEFAULT_PROMPT_PREFIX}
       
       【关键配置 Key Configuration】:
@@ -41,6 +41,20 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       ${DEFAULT_PROMPT_SUFFIX}
     `;
 
+    // Add multi-image reasoning instructions if reference is provided
+    if (referenceImage) {
+      finalPrompt = `
+      [指令 Instruction]: 请结合提供的两张图片生成一张新的实景图。
+      - 图片 1 (Image 1) 是建筑的【主视图/平面图】(Main View)。
+      - 图片 2 (Image 2) 是建筑的【侧视图/参考图】(Side View / Reference View)。
+      
+      [任务 Task]: 基于这两张图片的结构信息，构建该建筑的 3D 空间关系。
+      请确保建筑的门窗位置、轮廓结构与两张参考图严格一致。
+      
+      ${finalPrompt}
+      `;
+    }
+
     const parts: any[] = [
       { text: finalPrompt },
       {
@@ -51,6 +65,16 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       }
     ];
 
+    if (referenceImage) {
+      const refBase64 = referenceImage.base64.split(',')[1];
+      parts.push({
+        inlineData: {
+          mimeType: referenceImage.mimeType,
+          data: refBase64,
+        },
+      });
+    }
+
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview', 
       contents: {
@@ -59,7 +83,7 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       config: {
         imageConfig: {
           aspectRatio: "16:9",
-          imageSize: "2K" // Upgraded to 2K as requested
+          imageSize: "2K" 
         }
       }
     });

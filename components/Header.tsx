@@ -16,7 +16,7 @@ const Header: React.FC = () => {
         </div>
         <div className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
           <Droplets size={14} className="text-sky-500" />
-          <span className="hidden sm:inline">污水处理厂·专业渲染版</span>
+          <span className="hidden sm:inline">环境工程·专业渲染版</span>
         </div>
       </div>
     </header>
