@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus, ImagePlus, Trash2, Maximize2, Moon, Stars } from 'lucide-react';
+import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus, ImagePlus, Trash2, Maximize2, Moon, Stars, Key, ExternalLink } from 'lucide-react';
 import Header from './components/Header';
 import UploadArea from './components/UploadArea';
 import ResultViewer from './components/ResultViewer';
@@ -11,6 +11,9 @@ import { AppStatus, ImageData, Session } from './types';
 import { RENDERING_TYPES, INDUSTRIAL_STYLES, SUPPORTED_MIME_TYPES, MAX_FILE_SIZE_MB } from './constants';
 
 const App: React.FC = () => {
+  // API Key Selection State (Mandatory for Gemini 3 Pro)
+  const [hasKey, setHasKey] = useState<boolean | null>(null);
+  
   // Intro Animation State
   const [showIntro, setShowIntro] = useState(true);
 
@@ -28,8 +31,25 @@ const App: React.FC = () => {
   // Zoom State
   const [zoomedImageUrl, setZoomedImageUrl] = useState<string | null>(null);
 
-  const activeSession = sessions.find(s => s.id === activeSessionId) || null;
+  useEffect(() => {
+    const checkKey = async () => {
+      const selected = await (window as any).aistudio.hasSelectedApiKey();
+      setHasKey(selected);
+    };
+    checkKey();
+  }, []);
 
+  const handleSelectKey = async () => {
+    try {
+      await (window as any).aistudio.openSelectKey();
+      // Assume success as per instructions to avoid race condition
+      setHasKey(true);
+    } catch (err) {
+      console.error("Key selection failed", err);
+    }
+  };
+
+  const activeSession = sessions.find(s => s.id === activeSessionId) || null;
   const isEyeLevelMode = selectedType === RENDERING_TYPES.find(t => t.id === 'eye-level')?.value;
 
   const handleImagesSelected = (newImages: ImageData[]) => {
@@ -108,22 +128,11 @@ const App: React.FC = () => {
   const handleGenerate = async () => {
     if (!activeSession) return;
 
-    let sourceImage = activeSession.original;
-    if (activeSession.status === AppStatus.SUCCESS && activeSession.generated) {
-      const mimeType = activeSession.generated.split(';')[0].split(':')[1] || 'image/png';
-      sourceImage = {
-        id: activeSession.id + '_refine',
-        base64: activeSession.generated,
-        mimeType: mimeType,
-        url: activeSession.generated
-      };
-    }
-
     updateActiveSession({ status: AppStatus.PROCESSING, error: null });
 
     try {
       const result = await generateRealisticImage({
-        image: sourceImage,
+        image: activeSession.original,
         referenceImage: isEyeLevelMode ? activeSession.referenceImage : null,
         prompt: activeSession.prompt.trim(),
         renderingType: selectedType,
@@ -137,10 +146,20 @@ const App: React.FC = () => {
         status: AppStatus.SUCCESS 
       });
     } catch (error: any) {
-      updateActiveSession({ 
-        status: AppStatus.ERROR, 
-        error: error.message || "生成过程中发生了未知错误。" 
-      });
+      const msg = error.message || "";
+      // If requested entity not found, it usually means the key is invalid/project not found
+      if (msg.includes("Requested entity was not found")) {
+        setHasKey(false);
+        updateActiveSession({ 
+          status: AppStatus.ERROR, 
+          error: "API Key 校验失败，请重新选择有效的付费项目 Key。" 
+        });
+      } else {
+        updateActiveSession({ 
+          status: AppStatus.ERROR, 
+          error: error.message || "生成过程中发生了未知错误。" 
+        });
+      }
     }
   };
 
@@ -152,12 +171,48 @@ const App: React.FC = () => {
     });
   };
 
+  // If key is not selected, show selection UI
+  if (hasKey === false) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white font-sans">
+        <div className="max-w-md w-full bg-slate-800 rounded-2xl p-8 shadow-2xl border border-slate-700 text-center space-y-6">
+          <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto text-blue-400">
+            <Key size={32} />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">需要选择 API Key</h1>
+            <p className="text-slate-400 text-sm">
+              当前应用使用的是 <strong>Gemini 3 Pro (Banana Pro)</strong> 模型，
+              请选择一个来自已开启计费的 GCP 项目的 API Key 才能继续使用。
+            </p>
+          </div>
+          <button 
+            onClick={handleSelectKey}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
+          >
+            <Key size={18} />
+            立即选择 API Key
+          </button>
+          <div className="pt-4 border-t border-slate-700">
+            <a 
+              href="https://ai.google.dev/gemini-api/docs/billing" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-slate-500 hover:text-blue-400 flex items-center justify-center gap-1 transition-colors"
+            >
+              查看计费说明文档 <ExternalLink size={12} />
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-700">
       {showIntro && <IntroAnimation onComplete={() => setShowIntro(false)} />}
       <Header />
 
-      {/* 纯净的预览放大层 - 无按钮遮挡 */}
       {zoomedImageUrl && (
         <div 
             className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 cursor-zoom-out"
@@ -176,10 +231,10 @@ const App: React.FC = () => {
         {sessions.length === 0 && (
           <div className="text-center mb-10 mt-8 space-y-4 animate-fade-in-up">
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
-              污水处理厂 <span className="text-blue-600">实景渲染</span> 专家
+              污水处理厂 <span className="text-blue-600">Pro 级渲染</span>
             </h1>
             <p className="max-w-2xl mx-auto text-lg text-slate-600">
-              上传 CAD 导图、PDF 图纸或手绘线稿，选择工业风格，AI 瞬间生成高质量效果图。
+              采用 Gemini 3 Pro (Banana Pro) 引擎，提供最高质量的工业实景转化能力。
             </p>
           </div>
         )}
@@ -199,15 +254,12 @@ const App: React.FC = () => {
                 <UploadArea onImagesSelected={handleImagesSelected} isProcessing={false} />
               ) : (
                 <div className="relative w-full rounded-xl overflow-hidden border-2 border-slate-100 bg-slate-50 group">
-                    {/* 主视图预览及点击放大 */}
                     <div 
                       className="relative h-64 w-full cursor-zoom-in bg-slate-100/50 flex items-center justify-center"
                       onClick={() => setZoomedImageUrl(activeSession?.original.url || null)}
                     >
                        <img src={activeSession?.original.url} alt="Original" className="max-h-full max-w-full object-contain" />
                     </div>
-
-                    {/* 移除/替换按钮 - 仅在侧边栏主视图悬浮显示，放大后不会出现 */}
                     {activeSession?.status !== AppStatus.PROCESSING && (
                       <button 
                         onClick={handleRemoveSession}
@@ -217,11 +269,10 @@ const App: React.FC = () => {
                         <Trash2 size={16} />
                       </button>
                     )}
-                    
                     {activeSession?.status === AppStatus.PROCESSING && (
                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center z-50">
                           <Loader2 size={32} className="text-blue-500 animate-spin mb-2" />
-                          <p className="text-sm font-bold text-slate-700">处理中...</p>
+                          <p className="text-sm font-bold text-slate-700">Pro 引擎渲染中...</p>
                        </div>
                     )}
                 </div>
@@ -362,7 +413,7 @@ const App: React.FC = () => {
                   {activeSession.status === AppStatus.PROCESSING ? (
                     <>
                       <Loader2 size={20} className="animate-spin" />
-                      渲染中...
+                      Pro 引擎渲染中...
                     </>
                   ) : activeSession.status === AppStatus.SUCCESS ? (
                      <>
@@ -372,7 +423,7 @@ const App: React.FC = () => {
                   ) : (
                     <>
                       <Wand2 size={20} />
-                      {isEyeLevelMode && activeSession.referenceImage ? "融合并渲染" : "开始渲染"}
+                      {isEyeLevelMode && activeSession.referenceImage ? "融合并 Pro 渲染" : "开始 Pro 渲染"}
                     </>
                   )}
                 </button>
@@ -389,7 +440,7 @@ const App: React.FC = () => {
           <div className="flex-1 bg-slate-50 border-t md:border-t-0 md:border-l border-slate-100 flex flex-col animate-fade-in-right">
              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <CheckSquare size={18} className="text-blue-500" /> 渲染画布
+                  <CheckSquare size={18} className="text-blue-500" /> 渲染画布 (Pro)
                 </h3>
              </div>
              

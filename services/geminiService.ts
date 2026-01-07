@@ -7,14 +7,11 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
   try {
     const apiKey = process.env.API_KEY;
 
-    // Debug log (safe, doesn't reveal key)
-    console.log("Gemini Service Initializing. API Key present:", !!apiKey);
-
     if (!apiKey) {
-      throw new Error("API配置错误：未找到 API Key。请检查 Vercel 环境变量设置并重新部署。");
+      throw new Error("API配置错误：未找到 API Key。请点击左上角或设置按钮选择 API Key。");
     }
 
-    // Initialize inside the function
+    // Always create a new instance to get the latest key from the process.env
     const ai = new GoogleGenAI({ apiKey: apiKey });
     
     const { image, referenceImage, prompt, renderingType, renderingStyle, isCoveredPools, isDuskMode, isNightMode } = request;
@@ -43,7 +40,7 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       ${DEFAULT_PROMPT_SUFFIX}
     `;
 
-    // If a reference image is provided, update the prompt to explain the relationship
+    // If a reference image is provided, update the prompt
     if (referenceImage) {
       finalPrompt = `
       [指令 Instruction]: 请结合提供的两张图片生成一张新的实景图。
@@ -57,8 +54,6 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       `;
     }
 
-    console.log("Sending request to Gemini model...");
-
     const parts: any[] = [
       { text: finalPrompt },
       {
@@ -69,7 +64,6 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       }
     ];
 
-    // Add secondary image if it exists
     if (referenceImage) {
       const referenceBase64 = referenceImage.base64.split(',')[1];
       parts.push({
@@ -80,21 +74,25 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       });
     }
 
+    // Using gemini-3-pro-image-preview (Banana Pro) as requested
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image', // supports multi-image
+      model: 'gemini-3-pro-image-preview', 
       contents: {
         parts: parts,
       },
+      config: {
+        imageConfig: {
+          aspectRatio: "16:9",
+          imageSize: "1K"
+        }
+      }
     });
-
-    console.log("Response received.");
 
     let generatedImageUrl = '';
 
-    // Parse response to find image data
     if (response.candidates && response.candidates.length > 0) {
-      const parts = response.candidates[0].content.parts;
-      for (const part of parts) {
+      const respParts = response.candidates[0].content.parts;
+      for (const part of respParts) {
         if (part.inlineData && part.inlineData.data) {
           generatedImageUrl = `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
           break;
@@ -109,28 +107,20 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
     return { imageUrl: generatedImageUrl };
 
   } catch (error: any) {
-    console.error("Gemini API Error Full Object:", error);
+    console.error("Gemini API Error:", error);
     
     const errorMessage = error.message || JSON.stringify(error);
 
-    // 1. Handle API Key missing/invalid
-    if (errorMessage.includes("API key")) {
-      throw new Error("API 密钥无效或未配置。请检查 Vercel 环境变量。");
+    if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
+      throw new Error("API 调用配额已耗尽。请在 Google AI Studio 检查您的计费项目。");
     }
 
-    // 2. Handle Quota Exceeded (429)
-    if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED") || errorMessage.includes("quota")) {
-      throw new Error("API 调用配额已耗尽 (429)。您的 Gemini API 免费额度已用完，请稍后再试，或在 Google AI Studio 更换新的 API Key。");
-    }
-
-    // 3. Handle Model Overloaded (503)
     if (errorMessage.includes("503") || errorMessage.includes("overloaded")) {
       throw new Error("模型服务当前繁忙 (503)，请稍后重试。");
     }
 
-    // 4. Handle Blocked Content (Safety settings)
     if (errorMessage.includes("SAFETY") || errorMessage.includes("blocked")) {
-        throw new Error("生成的内容因安全策略被拦截，请尝试修改提示词或更换图片。");
+        throw new Error("生成内容因安全策略被拦截，请尝试修改描述。");
     }
 
     throw new Error(`生成失败: ${error.message || "请检查网络或稍后重试"}`);
