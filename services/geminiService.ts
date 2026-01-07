@@ -11,12 +11,10 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       throw new Error("API配置错误：未找到 API Key。请点击左上角或设置按钮选择 API Key。");
     }
 
-    // Always create a new instance to get the latest key from the process.env
     const ai = new GoogleGenAI({ apiKey: apiKey });
     
-    const { image, referenceImage, prompt, renderingType, renderingStyle, isCoveredPools, isDuskMode, isNightMode } = request;
+    const { image, prompt, renderingType, renderingStyle, isCoveredPools, isDuskMode, isNightMode } = request;
 
-    // Remove the data URL prefix to get raw base64
     const base64Data = image.base64.split(',')[1];
 
     let environmentPrompt = "";
@@ -26,33 +24,22 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       environmentPrompt = `- 环境氛围 (Night): ${NIGHT_PROMPT}`;
     }
 
-    let finalPrompt = `
+    const finalPrompt = `
       ${DEFAULT_PROMPT_PREFIX}
       
       【关键配置 Key Configuration】:
-      - 视图 Viewpoint: ${renderingType}
-      - 风格 Style: ${renderingStyle}
-      ${isCoveredPools ? '- 特殊结构: 所有污水处理池必须加盖 (Ensure all sewage treatment pools are covered with modern architectural structures/domes. No open water tanks).' : ''}
+      - 任务与视图类型: ${renderingType}
+      - 推荐风格: ${renderingStyle}
+      ${isCoveredPools ? '- 特殊处理: 对所有池体结构进行美化加盖处理 (Ensure all tanks/pools are architecturally covered).' : ''}
       ${environmentPrompt}
 
-      【用户特定描述 User Description】: ${prompt || "Standard sewage treatment plant facility."}
+      【详细设计要求】: 
+      1. 如果图像中有标记（如红线、文字、涂鸦），请作为设计引导并在最终图中移除它们。
+      2. 保持原图的基本空间结构和透视关系。
+      3. ${prompt || "生成高质量的实景效果。"}
       
       ${DEFAULT_PROMPT_SUFFIX}
     `;
-
-    // If a reference image is provided, update the prompt
-    if (referenceImage) {
-      finalPrompt = `
-      [指令 Instruction]: 请结合提供的两张图片生成一张新的实景图。
-      - 图片 1 (Image 1) 是建筑的【正视图/主视图】(Front View / Main View)。
-      - 图片 2 (Image 2) 是建筑的【侧视图/参考图】(Side View / Reference View)。
-      
-      [任务 Task]: 基于这两张图片的结构信息，构建该建筑的 3D 空间关系，并生成一张【人视视角 (Eye-level Perspective)】的实景效果图。
-      请确保建筑的门窗位置、轮廓结构与两张参考图严格一致。
-      
-      ${finalPrompt}
-      `;
-    }
 
     const parts: any[] = [
       { text: finalPrompt },
@@ -64,17 +51,6 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       }
     ];
 
-    if (referenceImage) {
-      const referenceBase64 = referenceImage.base64.split(',')[1];
-      parts.push({
-        inlineData: {
-          mimeType: referenceImage.mimeType,
-          data: referenceBase64,
-        },
-      });
-    }
-
-    // Using gemini-3-pro-image-preview (Banana Pro) as requested
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview', 
       contents: {
@@ -108,21 +84,16 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
 
   } catch (error: any) {
     console.error("Gemini API Error:", error);
-    
     const errorMessage = error.message || JSON.stringify(error);
-
     if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
       throw new Error("API 调用配额已耗尽。请在 Google AI Studio 检查您的计费项目。");
     }
-
     if (errorMessage.includes("503") || errorMessage.includes("overloaded")) {
       throw new Error("模型服务当前繁忙 (503)，请稍后重试。");
     }
-
     if (errorMessage.includes("SAFETY") || errorMessage.includes("blocked")) {
-        throw new Error("生成内容因安全策略被拦截，请尝试修改描述。");
+        throw new Error("生成内容因安全策略被拦截，请尝试修改描述或上传合规的图片。");
     }
-
     throw new Error(`生成失败: ${error.message || "请检查网络或稍后重试"}`);
   }
 };

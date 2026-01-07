@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus, ImagePlus, Trash2, Maximize2, Moon, Stars, Key, ExternalLink } from 'lucide-react';
+import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus, ImagePlus, Trash2, Maximize2, Moon, Stars, Key, ExternalLink, Home } from 'lucide-react';
 import Header from './components/Header';
 import UploadArea from './components/UploadArea';
 import ResultViewer from './components/ResultViewer';
@@ -42,7 +42,6 @@ const App: React.FC = () => {
   const handleSelectKey = async () => {
     try {
       await (window as any).aistudio.openSelectKey();
-      // Assume success as per instructions to avoid race condition
       setHasKey(true);
     } catch (err) {
       console.error("Key selection failed", err);
@@ -50,7 +49,6 @@ const App: React.FC = () => {
   };
 
   const activeSession = sessions.find(s => s.id === activeSessionId) || null;
-  const isEyeLevelMode = selectedType === RENDERING_TYPES.find(t => t.id === 'eye-level')?.value;
 
   const handleImagesSelected = (newImages: ImageData[]) => {
     if (newImages.length === 0) return;
@@ -85,34 +83,6 @@ const App: React.FC = () => {
     updateActiveSession({ prompt: val });
   };
 
-  const handleReferenceImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !activeSessionId) return;
-
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      alert(`文件过大，请上传小于 ${MAX_FILE_SIZE_MB}MB 的图片`);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      const refImage: ImageData = {
-        id: "ref_" + Date.now(),
-        base64: result,
-        mimeType: file.type,
-        url: URL.createObjectURL(file)
-      };
-      updateActiveSession({ referenceImage: refImage });
-    };
-    reader.readAsDataURL(file);
-    event.target.value = '';
-  };
-
-  const handleRemoveReferenceImage = () => {
-    updateActiveSession({ referenceImage: null });
-  };
-
   const handleDuskChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setIsDuskMode(checked);
@@ -133,7 +103,7 @@ const App: React.FC = () => {
     try {
       const result = await generateRealisticImage({
         image: activeSession.original,
-        referenceImage: isEyeLevelMode ? activeSession.referenceImage : null,
+        referenceImage: null, // Always null as we removed reference image feature
         prompt: activeSession.prompt.trim(),
         renderingType: selectedType,
         renderingStyle: selectedStyle,
@@ -147,7 +117,6 @@ const App: React.FC = () => {
       });
     } catch (error: any) {
       const msg = error.message || "";
-      // If requested entity not found, it usually means the key is invalid/project not found
       if (msg.includes("Requested entity was not found")) {
         setHasKey(false);
         updateActiveSession({ 
@@ -171,7 +140,6 @@ const App: React.FC = () => {
     });
   };
 
-  // If key is not selected, show selection UI
   if (hasKey === false) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white font-sans">
@@ -231,10 +199,10 @@ const App: React.FC = () => {
         {sessions.length === 0 && (
           <div className="text-center mb-10 mt-8 space-y-4 animate-fade-in-up">
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
-              污水处理厂 <span className="text-blue-600">Pro 级渲染</span>
+              人居环境与工业 <span className="text-blue-600">Pro 级渲染</span>
             </h1>
             <p className="max-w-2xl mx-auto text-lg text-slate-600">
-              采用 Gemini 3 Pro (Banana Pro) 引擎，提供最高质量的工业实景转化能力。
+              上传图纸或标记稿，AI 瞬间转化为温馨乡村风格或现代工业实景。
             </p>
           </div>
         )}
@@ -246,7 +214,7 @@ const App: React.FC = () => {
               <div className="flex items-center justify-between mb-2">
                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <ImageIcon className="text-blue-500" size={20}/>
-                    {sessions.length > 0 ? "1. 当前主视图" : "上传正视图/线稿"}
+                    {sessions.length > 0 ? "1. 当前图纸" : "上传图纸/标记稿"}
                  </h2>
               </div>
 
@@ -284,59 +252,33 @@ const App: React.FC = () => {
                 <div>
                   <label className="flex items-center gap-2 text-sm font-bold text-slate-800 mb-2">
                     <LayoutTemplate size={16} className="text-blue-500" />
-                    2. 选择效果图类型
+                    2. 选择改造/渲染类型
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {RENDERING_TYPES.map((type) => (
                       <button
                         key={type.id}
                         type="button"
                         onClick={() => setSelectedType(type.value)}
                         disabled={activeSession.status === AppStatus.PROCESSING}
-                        className={`text-xs py-2 px-2 rounded-lg border transition-all truncate ${
+                        className={`text-xs py-2 px-2 rounded-lg border transition-all truncate flex items-center justify-center gap-1 ${
                           selectedType === type.value
                             ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium'
                             : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'
                         }`}
                       >
+                        {type.id === 'residential-renovation' && <Home size={12} />}
                         {type.label}
                       </button>
                     ))}
                   </div>
-
-                  {isEyeLevelMode && activeSession.status !== AppStatus.PROCESSING && (
-                    <div className="mt-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100 animate-fade-in">
-                       <label className="flex items-center justify-between text-xs font-semibold text-blue-800 mb-2">
-                          <span className="flex items-center gap-1"><ImagePlus size={14}/> 补充侧视图 (可选)</span>
-                          {activeSession.referenceImage && (
-                            <button onClick={handleRemoveReferenceImage} className="text-red-500 hover:underline">移除</button>
-                          )}
-                       </label>
-                       
-                       {!activeSession.referenceImage ? (
-                         <div className="relative group flex items-center justify-center border-2 border-dashed border-blue-200 rounded-md bg-white hover:bg-blue-50 h-16 cursor-pointer transition-colors">
-                            <input type="file" accept={SUPPORTED_MIME_TYPES.join(',')} onChange={handleReferenceImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
-                            <span className="text-xs text-blue-400 group-hover:text-blue-600 flex items-center gap-1">
-                              <Plus size={14} /> 点击上传侧视图
-                            </span>
-                         </div>
-                       ) : (
-                         <div className="flex items-center gap-3 bg-white p-2 rounded border border-blue-200 relative group/ref">
-                            <img src={activeSession.referenceImage.url} alt="Ref" className="w-12 h-12 object-cover rounded bg-slate-100 cursor-zoom-in border" onClick={() => setZoomedImageUrl(activeSession.referenceImage?.url || null)} />
-                            <div className="flex-1 min-w-0">
-                               <p className="text-xs font-medium text-slate-700 truncate">侧视图已就绪</p>
-                            </div>
-                         </div>
-                       )}
-                    </div>
-                  )}
                 </div>
 
                 <div>
                   <div className="flex flex-col gap-2 mb-2">
                      <label className="flex items-center gap-2 text-sm font-bold text-slate-800">
                       <Palette size={16} className="text-blue-500" />
-                      3. 选择工业风格与氛围
+                      3. 环境氛围配置
                     </label>
                     <div className="flex flex-wrap gap-x-4 gap-y-2">
                         <label className="flex items-center gap-2 cursor-pointer group">
@@ -386,7 +328,7 @@ const App: React.FC = () => {
                     value={activeSession.prompt}
                     onChange={(e) => handlePromptChange(e.target.value)}
                     disabled={activeSession.status === AppStatus.PROCESSING}
-                    placeholder={activeSession.status === AppStatus.SUCCESS ? "例如：增加树木，调整色温..." : "例如：增加背景植被..."}
+                    placeholder={activeSession.status === AppStatus.SUCCESS ? "例如：增加门前绿化，调整天空颜色..." : "例如：增加彩绘细节，调整色调..."}
                     className="w-full px-4 py-3 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm transition-shadow h-16"
                   />
                 </div>
@@ -423,7 +365,7 @@ const App: React.FC = () => {
                   ) : (
                     <>
                       <Wand2 size={20} />
-                      {isEyeLevelMode && activeSession.referenceImage ? "融合并 Pro 渲染" : "开始 Pro 渲染"}
+                      开始 Pro 渲染
                     </>
                   )}
                 </button>

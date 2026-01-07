@@ -23,16 +23,22 @@ export const RENDERING_TYPES: RenderOption[] = [
     description: '红线内外分区改造与融合'
   },
   { 
+    id: 'residential-renovation',
+    label: '人居环境改造',
+    value: '根据标记进行设计，并将建筑立面设计成乡村风格，增加彩绘，去掉所有标记、标线、范围线及参考图，整个图片和谐美观，温馨的感觉。Rural residential renovation, country style with mural paintings, remove all original marks, lines, and reference frames, harmonious and beautiful composition, warm and cozy feeling, photorealistic, 8k resolution.',
+    description: '乡村风格与彩绘改造'
+  },
+  { 
     id: 'aerial', 
     label: '鸟瞰图', 
-    value: '根据这张图的用地地形，生成一个现代污水厂，保持轮廓和道路位置不变。原始平面图的边缘是美观的栏杆形式围墙，围墙外只有绿化景观，出入口根据平面图布置，布局合理。Low altitude aerial view, drone shot from lower angle, modern sewage treatment plant, industrial park layout, flat white roofs, beautiful railing-style perimeter fences, lush green landscaping outside the fence, entrances precisely placed according to the original layout, rational and organized site design, Manicured landscape, lush green trees surrounding buildings, organized asphalt roads, lawns, clean water surfaces, sunny day, clear blue sky, soft natural lighting, Architectural visualization, photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
+    value: '根据这张图的用地地形，生成一个现代污水厂，保持轮廓和道路位置不变。原始平面图的边缘是美观的栏杆形式围墙，围墙外只有绿化景观，出入口根据平面图布置，布局合理。Low altitude aerial view, drone shot from lower angle, modern sewage treatment plant, industrial park layout, flat white roofs, beautiful railing-style perimeter fences, lush green landscaping outside the fence, entrances precisely placed according to the original layout, rational and organized site design, Manicured landscape, lush green trees surrounding buildings, organized asphalt roads, lawns, clean water surfaces, sunny day, clear blue sky, soft natural lighting, Architectural visualization, photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.', 
     description: '整体布局，保留地形轮廓' 
   },
   { 
     id: 'eye-level', 
     label: '人视图', 
-    value: '识别图中的门和窗户轮廓，生成一张人视视角的效果图，能够同时看到建筑的多个面（结合正视图与侧视图信息）。布局合理，严格限制门和窗户的位置不变，严格限制外轮廓不变，现代建筑，白色真石漆外立面，建筑表面真实反射，有局部高光，提高真实摄影质感，明媚的光线，电影级别的光线，分析合理，高级感; 建筑周围增加景观布置，阳光明媚的白天，蓝天，布局合理， photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
-    description: '模拟人眼观看，支持正侧双图合成' 
+    value: '识别图中的门和窗户轮廓，生成一张人视视角的效果图。布局合理，严格限制门和窗户的位置不变，严格限制外轮廓不变，现代建筑，白色真石漆外立面，建筑表面真实反射，有局部高光，提高真实摄影质感，明媚的光线，电影级别的光线，分析合理，高级感; 建筑周围增加景观布置，阳光明媚的白天，蓝天，布局合理， photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.', 
+    description: '模拟人眼观看视角' 
   },
   { 
     id: 'color-plan', 
@@ -43,15 +49,9 @@ export const RENDERING_TYPES: RenderOption[] = [
   { 
     id: 'front', 
     label: '正视图', 
-    value: '正视图。识别图中的门和窗户轮廓，生成一张效果图，布局合理，严格限制门和窗户的位置不变，严格限制外轮廓不变，现代建筑，白色真石漆外立面，建筑表面真实反射，有局部高光，提高真实摄影质感，明媚的光线，电影级别的光线，分析合理，高级感; 建筑周围增加景观布置，阳光明媚的白天，蓝天，布局合理， photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
+    value: '正视图。识别图中的门和窗户轮廓，生成一张效果图，布局合理，严格限制门和窗户的位置不变，严格限制外轮廓不变，现代建筑，白色真石漆外立面，建筑表面真实反射，有局部高光，提高真实摄影质感，明媚的光线，电影级别的光线，分析合理，高级感; 建筑周围增加景观布置，阳光明媚的白天，蓝天，布局合理， photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.', 
     description: '建筑正面立面' 
-  },
-  { 
-    id: 'side', 
-    label: '侧视图', 
-    value: '侧视图。识别图中的门和窗户轮廓，生成一张效果图，布局合理，严格限制门和窗户的位置不变，严格限制外轮廓不变，现代建筑，白色真石漆外立面，建筑表面真实反射，有局部高光，提高真实摄影质感，明媚的光线，电影级别的光线，分析合理，高级感; 建筑周围增加景观布置，阳光明媚的白天，蓝天，布局合理， photorealistic, 3D rendering, Octane render, Unreal Engine 5, high definition, 8k resolution, highly detailed textures, sharp focus, professional photography, cinematic lighting, masterpiece.负面词：模糊，水印', 
-    description: '建筑侧面展示' 
-  },
+  }
 ];
 
 export const INDUSTRIAL_STYLES: RenderOption[] = [
