@@ -199,7 +199,7 @@ const App: React.FC = () => {
         {sessions.length === 0 && (
           <div className="text-center mb-10 mt-8 space-y-4 animate-fade-in-up">
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
-              人居环境与工业 <span className="text-blue-600">Pro 级渲染</span>
+              环境工程 <span className="text-blue-600">效果图渲染</span>
             </h1>
             <p className="max-w-2xl mx-auto text-lg text-slate-600">
               上传图纸或标记稿，AI 瞬间转化为温馨乡村风格、现代工业实景或生态修复效果。
@@ -214,7 +214,7 @@ const App: React.FC = () => {
               <div className="flex items-center justify-between mb-2">
                  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <ImageIcon className="text-blue-500" size={20}/>
-                    {sessions.length > 0 ? "1. 当前图纸" : "上传图纸/标记稿"}
+                    {sessions.length > 0 ? "1. 当前图纸" : "上传图纸"}
                  </h2>
               </div>
 
@@ -240,7 +240,7 @@ const App: React.FC = () => {
                     {activeSession?.status === AppStatus.PROCESSING && (
                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center z-50">
                           <Loader2 size={32} className="text-blue-500 animate-spin mb-2" />
-                          <p className="text-sm font-bold text-slate-700">Pro 引擎渲染中...</p>
+                          <p className="text-sm font-bold text-slate-700">引擎渲染中...</p>
                        </div>
                     )}
                 </div>
@@ -356,7 +356,7 @@ const App: React.FC = () => {
                   {activeSession.status === AppStatus.PROCESSING ? (
                     <>
                       <Loader2 size={20} className="animate-spin" />
-                      Pro 引擎渲染中...
+                      引擎渲染中...
                     </>
                   ) : activeSession.status === AppStatus.SUCCESS ? (
                      <>
@@ -366,7 +366,7 @@ const App: React.FC = () => {
                   ) : (
                     <>
                       <Wand2 size={20} />
-                      开始 Pro 渲染
+                      开始渲染
                     </>
                   )}
                 </button>
@@ -383,7 +383,7 @@ const App: React.FC = () => {
           <div className="flex-1 bg-slate-50 border-t md:border-t-0 md:border-l border-slate-100 flex flex-col animate-fade-in-right">
              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <CheckSquare size={18} className="text-blue-500" /> 渲染画布 (Pro)
+                  <CheckSquare size={18} className="text-blue-500" /> 效果图
                 </h3>
              </div>
              
