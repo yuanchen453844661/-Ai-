@@ -17,10 +17,10 @@ export const NIGHT_PROMPT = "夜景，建筑可视化，写实风格，3D渲染�
 
 export const RENDERING_TYPES: RenderOption[] = [
   { 
-    id: 'site-integration',
-    label: '实景融合图',
-    value: '这是一个实景融合任务。请执行以下指令：1. 保持红线范围外的环境完全不变；2. 将红线内的区域改为现代社区公园，景观线条灵动优美；3. 公园内加入正在玩耍的小孩和散步的老人，充满活力；4. 模拟真实的户外阳光和树影投射的光影效果，材质饱和度自然真实；5. 最终图像为高清且细节丰富，实现照片级画质；6. 完全去除画面中的红线痕迹。Photorealistic community park integration, keep area outside red line unchanged, modern landscape architecture, people interacting with nature, realistic sunlight and leaf shadows, high resolution, 8k, cinematic lighting.',
-    description: '红线内外分区改造与融合'
+    id: 'ecological-restoration',
+    label: '生态修复设计',
+    value: '指令：清除河道中杂草，疏通河道，保持河道总体形状和走势不变，并在右侧河道结合现有地形打造湿地与木质人行栈道，丰富水生植物种类。天气晴朗，保持照片角度不变，2k画质。Ecological river restoration, clear weeds, dredge river, maintain original river shape and flow, create wetland and wooden boardwalk on the right side following terrain, diverse aquatic plants, sunny day, photorealistic architectural visualization, 2k resolution.',
+    description: '河道整治与湿地景观'
   },
   { 
     id: 'residential-renovation',

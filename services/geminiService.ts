@@ -34,7 +34,7 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       ${environmentPrompt}
 
       【详细设计要求】: 
-      1. 如果图像中有标记（如红线、文字、涂鸦），请作为设计引导并在最终图中移除它们。
+      1. 如果图像中有标记（如红线、文字、涂鸦、标线、参考图），请作为设计引导并在最终图中彻底移除它们。
       2. 保持原图的基本空间结构和透视关系。
       3. ${prompt || "生成高质量的实景效果。"}
       
@@ -59,7 +59,7 @@ export const generateRealisticImage = async (request: GenerateRequest): Promise<
       config: {
         imageConfig: {
           aspectRatio: "16:9",
-          imageSize: "1K"
+          imageSize: "2K" // Upgraded to 2K as requested
         }
       }
     });

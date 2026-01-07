@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus, ImagePlus, Trash2, Maximize2, Moon, Stars, Key, ExternalLink, Home } from 'lucide-react';
+import { Loader2, Wand2, AlertCircle, Image as ImageIcon, LayoutTemplate, Palette, CheckSquare, RefreshCw, Layers, X, Plus, ImagePlus, Trash2, Maximize2, Moon, Stars, Key, ExternalLink, Home, Droplets } from 'lucide-react';
 import Header from './components/Header';
 import UploadArea from './components/UploadArea';
 import ResultViewer from './components/ResultViewer';
@@ -103,7 +103,7 @@ const App: React.FC = () => {
     try {
       const result = await generateRealisticImage({
         image: activeSession.original,
-        referenceImage: null, // Always null as we removed reference image feature
+        referenceImage: null, 
         prompt: activeSession.prompt.trim(),
         renderingType: selectedType,
         renderingStyle: selectedStyle,
@@ -202,7 +202,7 @@ const App: React.FC = () => {
               人居环境与工业 <span className="text-blue-600">Pro 级渲染</span>
             </h1>
             <p className="max-w-2xl mx-auto text-lg text-slate-600">
-              上传图纸或标记稿，AI 瞬间转化为温馨乡村风格或现代工业实景。
+              上传图纸或标记稿，AI 瞬间转化为温馨乡村风格、现代工业实景或生态修复效果。
             </p>
           </div>
         )}
@@ -268,6 +268,7 @@ const App: React.FC = () => {
                         }`}
                       >
                         {type.id === 'residential-renovation' && <Home size={12} />}
+                        {type.id === 'ecological-restoration' && <Droplets size={12} />}
                         {type.label}
                       </button>
                     ))}
